@@ -3,10 +3,9 @@ using DistCqrs.Core.Command;
 
 namespace DistCqrs.Core.Services
 {
-    public interface IService
+    public interface IService<in TCmd> 
+        where TCmd : ICommand
     {
-        bool CanProcess(ICommand cmd);
-
-        Task Process(ICommand cmd);
+        Task Process(TCmd cmd);
     }
 }

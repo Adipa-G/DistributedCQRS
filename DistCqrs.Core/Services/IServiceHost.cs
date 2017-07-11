@@ -1,7 +1,11 @@
-﻿namespace DistCqrs.Core.Services
+﻿using System.Threading.Tasks;
+using DistCqrs.Core.Command;
+
+namespace DistCqrs.Core.Services
 {
     public interface IServiceHost
     {
-        void Register<T>() where T : IService;
+        Task CommandReceived<TCmd>(TCmd cmd)
+            where TCmd : ICommand;
     }
 }

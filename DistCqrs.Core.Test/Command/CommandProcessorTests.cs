@@ -30,10 +30,10 @@ namespace DistCqrs.Core.Test.Command
         [Test]
         public void GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
         {
-            serviceLocator.ResolveCommandHandler(Arg.Any<ICommand>())
-                .Returns((ICommandHandler<ICommand>)null);
+            serviceLocator.ResolveCommandHandler(Arg.Any<CreateAccountCommand>())
+                .Returns((ICommandHandler<CreateAccountCommand>)null);
 
-            var sut = CreateSut();
+            var sut = CreateSut<CreateAccountCommand>();
 
             Assert.That(() => sut.Process(new CreateAccountCommand()),
                 Throws.TypeOf<ServiceLocationException>());
@@ -43,6 +43,12 @@ namespace DistCqrs.Core.Test.Command
         public void GivenCommand_WhenProcess_ThenLoadRootAndGenerateEvents()
         {
             var rootId = Guid.NewGuid();
+
+            var cmd = new UpdateAccountBalanceCommand()
+                      {
+                          RootId = rootId,
+                          Change = 10
+                      };
 
             eventStore.GetEvents(rootId)
                 .Returns(new List<IEvent>()
@@ -54,18 +60,27 @@ namespace DistCqrs.Core.Test.Command
                 .Returns(r => new Account());
 
             serviceLocator
-                .ResolveEventHandler(Arg.Any<Account>(),
-                    new AccountCreatedEvent())
+                .ResolveCommandHandler(cmd)
+                .Returns(new UpdateAccountBalanceCommandHandler());
+
+            serviceLocator
+                .ResolveEventHandler(Arg.Any<Account>(), Arg.Any<AccountCreatedEvent>())
                 .Returns(new AccountCreatedEventHandler());
 
+            var sut = CreateSut<UpdateAccountBalanceCommand>();
+            sut.Process(cmd);
 
-
-            Assert.IsTrue(true);
+            serviceLocator.Received(1).ResolveCommandHandler(cmd);
+            eventStore.Received(1).GetEvents(rootId);
+            rootFactory.Received(1).Create(Arg.Any<AccountCreatedEvent>());
+            eventStore.Received(1).SaveEvents(Arg.Any<IList<IEvent>>());
         }
 
-        private ICommandProcessor CreateSut()
+        private ICommandProcessor<TCmd> CreateSut<TCmd>() 
+            where TCmd : ICommand
         {
-            return new CommandProcessor(rootFactory, serviceLocator, eventStore);
+            return new CommandProcessor<TCmd>(
+                rootFactory, serviceLocator, eventStore);
         }
     }
 }

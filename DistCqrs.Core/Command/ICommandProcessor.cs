@@ -2,8 +2,9 @@
 
 namespace DistCqrs.Core.Command
 {
-    public interface ICommandProcessor
+    public interface ICommandProcessor<in TCmd> 
+        where TCmd:ICommand
     {
-        Task Process(ICommand cmd);
+        Task Process(TCmd cmd);
     }
 }

@@ -3,18 +3,17 @@ using DistCqrs.Core.Command;
 
 namespace DistCqrs.Core.Services.Impl
 {
-    public abstract class BaseService : IService
+    public abstract class BaseService<TCmd> : IService<TCmd>
+        where TCmd:ICommand
     {
-        private readonly ICommandProcessor processor;
+        private readonly ICommandProcessor<TCmd> processor;
 
-        protected BaseService(ICommandProcessor processor)
+        protected BaseService(ICommandProcessor<TCmd> processor)
         {
             this.processor = processor;
         }
 
-        public abstract bool CanProcess(ICommand cmd);
-
-        public async Task Process(ICommand cmd)
+        public async Task Process(TCmd cmd)
         {
             await processor.Process(cmd);
         }

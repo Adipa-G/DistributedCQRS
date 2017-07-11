@@ -4,11 +4,11 @@ using DistCqrs.Core.DependencyInjection;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Exceptions;
-using DistCqrs.Core.Services;
 
 namespace DistCqrs.Core.Command.Impl
 {
-    public class CommandProcessor : ICommandProcessor
+    public class CommandProcessor<TCmd> : ICommandProcessor<TCmd> 
+        where TCmd:ICommand
     {
         private readonly IRootFactory rootFactory;
         private readonly IServiceLocator serviceLocator;
@@ -23,7 +23,7 @@ namespace DistCqrs.Core.Command.Impl
             this.eventStore = eventStore;
         }
 
-        public async Task Process(ICommand cmd)
+        public async Task Process(TCmd cmd)
         {
             var commandHandler = serviceLocator.ResolveCommandHandler(cmd);
             if (commandHandler == null)
