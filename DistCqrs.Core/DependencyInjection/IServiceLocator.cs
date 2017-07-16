@@ -6,14 +6,16 @@ namespace DistCqrs.Core.DependencyInjection
 {
     public interface IServiceLocator
     {
-        ICommandHandler<TCmd> ResolveCommandHandler<TCmd>(TCmd cmd)
-            where TCmd:ICommand;
-            
-        IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>(TRoot root, TEvent evt) 
-            where TRoot : IRoot 
-            where TEvent : IEvent;
+        ICommandHandler<TRoot, TCmd> ResolveCommandHandler<TRoot, TCmd>()
+            where TRoot : IRoot
+            where TCmd : ICommand<TRoot>;
 
-        IService<T> ResolveService<T>()
-            where T : ICommand;
+        IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>()
+            where TRoot : IRoot
+            where TEvent : IEvent<TRoot>;
+
+        IService<TRoot, TCmd> ResolveService<TRoot, TCmd>()
+            where TRoot : IRoot
+            where TCmd : ICommand<TRoot>;
     }
 }

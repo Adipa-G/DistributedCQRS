@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    public class AccountCreatedEventHandler : IEventHandler<Account,AccountCreatedEvent>
+    public class
+        AccountCreatedEventHandler : IEventHandler<Account, AccountCreatedEvent>
     {
-        public Account Apply(Account root, AccountCreatedEvent evt)
+        public Task Apply(Account root, AccountCreatedEvent evt)
         {
-            return new Account() {Id = evt.RootId};
+            root.Id = evt.RootId;
+            return Task.Delay(0);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.DependencyInjection;
+using DistCqrs.Core.Domain;
 using DistCqrs.Core.Exceptions;
 
 namespace DistCqrs.Core.Services.Impl
@@ -10,7 +11,7 @@ namespace DistCqrs.Core.Services.Impl
     {
         private readonly ILog log;
         private readonly IServiceLocator serviceLocator;
-        
+
         protected BaseServiceHost(ILog log,
             IServiceLocator serviceLocator)
         {
@@ -18,18 +19,20 @@ namespace DistCqrs.Core.Services.Impl
             this.serviceLocator = serviceLocator;
         }
 
-        public async Task CommandReceived<TCmd>(TCmd cmd) 
-            where TCmd:ICommand
+        public async Task CommandReceived<TRoot, TCmd>(TCmd cmd)
+            where TRoot : IRoot
+            where TCmd : ICommand<TRoot>
         {
-            var service = serviceLocator.ResolveService<TCmd>();
+            var service = serviceLocator.ResolveService<TRoot, TCmd>();
             if (service == null)
             {
-                throw new UnknownCommandException($"Unable to process command {cmd}, as it's unknown");
+                throw new UnknownCommandException(
+                    $"Unable to process command {cmd}, as it's unknown");
             }
 
             try
             {
-                await service.Process(cmd); ;
+                await service.Process(cmd);
                 await OnCommandProcessed(cmd);
             }
             catch (Exception ex)
@@ -39,8 +42,10 @@ namespace DistCqrs.Core.Services.Impl
             }
         }
 
-        protected abstract Task OnCommandProcessed(ICommand cmd);
+        protected abstract Task OnCommandProcessed<TRoot>(ICommand<TRoot> cmd)
+            where TRoot : IRoot;
 
-        protected abstract Task OnCommandError(ICommand cmd);
+        protected abstract Task OnCommandError<TRoot>(ICommand<TRoot> cmd)
+            where TRoot : IRoot;
     }
 }

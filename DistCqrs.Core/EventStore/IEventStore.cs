@@ -7,8 +7,10 @@ namespace DistCqrs.Core.EventStore
 {
     public interface IEventStore
     {
-        Task SaveEvents(IList<IEvent> events);
+        Task SaveEvents<TRoot>(IList<IEvent<TRoot>> events)
+            where TRoot : IRoot;
 
-        Task<IList<IEvent>> GetEvents(Guid rootId);
+        Task<IList<IEvent<TRoot>>> GetEvents<TRoot>(Guid rootId)
+            where TRoot : IRoot;
     }
 }

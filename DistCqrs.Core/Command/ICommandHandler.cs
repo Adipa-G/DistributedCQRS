@@ -4,9 +4,10 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Command
 {
-    public interface ICommandHandler<in TCmd> 
-        where TCmd:ICommand
+    public interface ICommandHandler<TRoot,in TCmd>
+        where TRoot : IRoot
+        where TCmd : ICommand<TRoot>
     {
-        Task<IList<IEvent>> Handle(IRoot root, TCmd cmd);
+        Task<IList<IEvent<TRoot>>> Handle(TRoot root, TCmd cmd);
     }
 }

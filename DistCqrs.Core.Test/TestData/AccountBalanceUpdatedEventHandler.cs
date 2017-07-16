@@ -1,13 +1,15 @@
-﻿using DistCqrs.Core.Domain;
+﻿using System.Threading.Tasks;
+using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    public class AccountBalanceUpdatedEventHandler : IEventHandler<Account,AccountBalanceUpdatedEvent>
+    public class AccountBalanceUpdatedEventHandler : IEventHandler<Account,
+        AccountBalanceUpdatedEvent>
     {
-        public Account Apply(Account root, AccountBalanceUpdatedEvent evt)
+        public Task Apply(Account root, AccountBalanceUpdatedEvent evt)
         {
             root.Balance += evt.Change;
-            return root;
+            return Task.Delay(0);
         }
     }
 }

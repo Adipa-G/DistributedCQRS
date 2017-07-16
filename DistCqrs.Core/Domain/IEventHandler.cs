@@ -1,9 +1,11 @@
-﻿namespace DistCqrs.Core.Domain
+﻿using System.Threading.Tasks;
+
+namespace DistCqrs.Core.Domain
 {
-    public interface IEventHandler<TRoot,TEvent> 
-        where TRoot:IRoot 
-        where TEvent:IEvent
+    public interface IEventHandler<TRoot, in TEvent>
+        where TRoot : IRoot
+        where TEvent : IEvent<TRoot>
     {
-        TRoot Apply(TRoot root, TEvent evt);
+        Task Apply(TRoot root, TEvent evt);
     }
 }

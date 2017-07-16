@@ -1,31 +1,38 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using DistCqrs.Core.DependencyInjection;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Exceptions;
+using DistCqrs.Core.View;
 
 namespace DistCqrs.Core.Command.Impl
 {
-    public class CommandProcessor<TCmd> : ICommandProcessor<TCmd> 
-        where TCmd:ICommand
+    public class CommandProcessor<TRoot, TCmd> : ICommandProcessor<TRoot, TCmd>
+        where TRoot : IRoot, new()
+        where TCmd : ICommand<TRoot>
     {
-        private readonly IRootFactory rootFactory;
         private readonly IServiceLocator serviceLocator;
         private readonly IEventStore eventStore;
+        private readonly IViewWriter viewWriter;
 
-        public CommandProcessor(IRootFactory rootFactory,
-            IServiceLocator serviceLocator,
-            IEventStore eventStore)
+        public CommandProcessor(IServiceLocator serviceLocator,
+            IEventStore eventStore,
+            IViewWriter viewWriter)
         {
-            this.rootFactory = rootFactory;
             this.serviceLocator = serviceLocator;
             this.eventStore = eventStore;
+            this.viewWriter = viewWriter;
         }
+
 
         public async Task Process(TCmd cmd)
         {
-            var commandHandler = serviceLocator.ResolveCommandHandler(cmd);
+            var commandHandler = serviceLocator.ResolveCommandHandler<TRoot,TCmd>();
             if (commandHandler == null)
             {
                 throw new ServiceLocationException(
@@ -33,22 +40,39 @@ namespace DistCqrs.Core.Command.Impl
             }
 
             var root = await GetRoot(cmd);
-            var events = await commandHandler.Handle(root,cmd);
+            var events = await commandHandler.Handle(root, cmd);
+
             await eventStore.SaveEvents(events);
+            await ApplyEvents(root, events);
+
+            await viewWriter.UpdateView(root);
         }
 
-        private async Task<IRoot> GetRoot(ICommand cmd)
+        private async Task<TRoot> GetRoot(TCmd cmd)
         {
-            var events = await eventStore.GetEvents(cmd.RootId);
-            if (!events.Any()) return null;
+            var events = await eventStore.GetEvents<TRoot>(cmd.RootId);
+            if (!events.Any()) return default(TRoot);
 
-            var root = rootFactory.Create(events.First());
+            var root = new TRoot();
+            await ApplyEvents(root, events);
+            return root;
+        }
+
+        private async Task ApplyEvents(TRoot root, IList<IEvent<TRoot>> events)
+        {
             foreach (var evt in events)
             {
-                var evtHandler = serviceLocator.ResolveEventHandler(root, evt);
-                evtHandler.Apply(root, evt);
+                var type = evt.GetType();
+
+                var resolveMethod = serviceLocator.GetType().GetMethod("ResolveEventHandler");
+                var genericResolveMethod = resolveMethod.MakeGenericMethod(root.GetType(),type);
+
+                var evtHandler = genericResolveMethod.Invoke(serviceLocator, new object[] {  });
+                var applyMethod = evtHandler.GetType().GetMethod("Apply");
+                
+                var task = (Task)applyMethod.Invoke(evtHandler, new object[] { root, evt });
+                await task;
             }
-            return root;
         }
     }
 }

@@ -6,11 +6,11 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
+    public class CreateAccountCommandHandler : ICommandHandler<Account,CreateAccountCommand>
     {
-        public Task<IList<IEvent>> Handle(IRoot root, CreateAccountCommand cmd)
+        public Task<IList<IEvent<Account>>> Handle(Account root, CreateAccountCommand cmd)
         {
-            IList<IEvent> list = new List<IEvent>();
+            IList<IEvent<Account>> list = new List<IEvent<Account>>();
             list.Add(new AccountCreatedEvent() {RootId = cmd.RootId});
             return Task.FromResult(list);
         }

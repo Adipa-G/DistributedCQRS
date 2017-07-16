@@ -5,11 +5,11 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    public class UpdateAccountBalanceCommandHandler : ICommandHandler<UpdateAccountBalanceCommand>
+    public class UpdateAccountBalanceCommandHandler : ICommandHandler<Account,UpdateAccountBalanceCommand>
     {
-        public Task<IList<IEvent>> Handle(IRoot root, UpdateAccountBalanceCommand cmd)
+        public Task<IList<IEvent<Account>>> Handle(Account root, UpdateAccountBalanceCommand cmd)
         {
-            IList<IEvent> list = new List<IEvent>();
+            IList<IEvent<Account>> list = new List<IEvent<Account>>();
             list.Add(
                 new AccountBalanceUpdatedEvent()
                 {
