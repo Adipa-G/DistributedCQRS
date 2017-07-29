@@ -7,7 +7,7 @@ namespace DistCqrs.Core.Services
     public interface IServiceHost
     {
         Task CommandReceived<TRoot, TCmd>(TCmd cmd)
-            where TRoot : IRoot
-            where TCmd : ICommand<TRoot>;
+            where TRoot : IRoot, new()
+            where TCmd : ICommand;
     }
 }

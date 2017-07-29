@@ -4,10 +4,8 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Services
 {
-    public interface IService<TRoot, in TCmd>
-        where TRoot : IRoot
-        where TCmd : ICommand<TRoot>
+    public interface IService
     {
-        Task Process(TCmd cmd);
+        
     }
 }

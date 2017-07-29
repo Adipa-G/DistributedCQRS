@@ -20,6 +20,8 @@ namespace DistCqrs.Core.EventStore.Impl
 
         protected abstract Task<IList<IEventRecord>> Load(Guid rootId);
 
+        public abstract Task<Type> GetRootType(Guid rootId);
+
         public async Task SaveEvents<TRoot>(IList<IEvent<TRoot>> events)
             where TRoot : IRoot
         {

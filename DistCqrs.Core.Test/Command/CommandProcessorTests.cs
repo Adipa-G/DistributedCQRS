@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.Command.Impl;
-using DistCqrs.Core.DependencyInjection;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Exceptions;
+using DistCqrs.Core.Resolve;
 using DistCqrs.Core.Test.TestData;
 using DistCqrs.Core.View;
 using NSubstitute;
@@ -17,6 +17,7 @@ namespace DistCqrs.Core.Test.Command
     public class CommandProcessorTests
     {
         private IServiceLocator serviceLocator;
+        private IRootTypeResolver rootTypeResolver;
         private IEventStore eventStore;
         private IViewWriter viewWriter;
 
@@ -24,8 +25,12 @@ namespace DistCqrs.Core.Test.Command
         public void Init()
         {
             serviceLocator = Substitute.For<IServiceLocator>();
+            rootTypeResolver = Substitute.For<IRootTypeResolver>();
             eventStore = Substitute.For<IEventStore>();
             viewWriter = Substitute.For<IViewWriter>();
+
+            rootTypeResolver.GetRootType(Arg.Any<CreateAccountCommand>())
+                .Returns(typeof(Account));
 
             serviceLocator
                 .ResolveCommandHandler<Account, CreateAccountCommand>()
@@ -51,7 +56,7 @@ namespace DistCqrs.Core.Test.Command
                 .ResolveCommandHandler<Account, CreateAccountCommand>()
                 .Returns((ICommandHandler<Account, CreateAccountCommand>) null);
 
-            var sut = CreateSut<Account,CreateAccountCommand>();
+            var sut = CreateSut();
 
             Assert.That(() => sut.Process(new CreateAccountCommand()),
                 Throws.TypeOf<ServiceLocationException>());
@@ -72,6 +77,8 @@ namespace DistCqrs.Core.Test.Command
                     Change = 10
                 });
 
+            eventStore.GetRootType(rootId).Returns(typeof(Account));
+
             eventStore.GetEvents<Account>(rootId).Returns(events);
 
             viewWriter.When(r => r.UpdateView(Arg.Any<Account>()))
@@ -83,7 +90,7 @@ namespace DistCqrs.Core.Test.Command
                           Change = 5
                       };
 
-            var sut = CreateSut<Account,UpdateAccountBalanceCommand>();
+            var sut = CreateSut();
             sut.Process(cmd);
 
             serviceLocator.Received(1)
@@ -106,6 +113,8 @@ namespace DistCqrs.Core.Test.Command
                           Change = 10
                       };
 
+            eventStore.GetRootType(rootId).Returns(typeof(Account));
+
             eventStore.GetEvents<Account>(rootId)
                 .Returns(new List<IEvent<Account>>()
                          {
@@ -113,7 +122,7 @@ namespace DistCqrs.Core.Test.Command
                          });
 
 
-            var sut = CreateSut<Account,UpdateAccountBalanceCommand>();
+            var sut = CreateSut();
             sut.Process(cmd);
 
             serviceLocator.Received(1)
@@ -127,11 +136,10 @@ namespace DistCqrs.Core.Test.Command
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
         }
 
-        private ICommandProcessor<TRoot,TCmd> CreateSut<TRoot,TCmd>()
-            where TRoot: IRoot , new()
-            where TCmd : ICommand<TRoot>
+        private ICommandProcessor CreateSut()
         {
-            return new CommandProcessor<TRoot,TCmd>(serviceLocator,eventStore, viewWriter);
+            return new CommandProcessor(serviceLocator, rootTypeResolver,
+                eventStore, viewWriter);
         }
     }
 }

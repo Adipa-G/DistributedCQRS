@@ -3,7 +3,7 @@ using DistCqrs.Core.Command;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    public class UpdateAccountBalanceCommand : ICommand<Account>
+    public class UpdateAccountBalanceCommand : ICommand
     {
         public Guid RootId { get; set; }
 

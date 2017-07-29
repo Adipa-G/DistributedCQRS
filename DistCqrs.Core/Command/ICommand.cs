@@ -3,8 +3,7 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Command
 {
-    public interface ICommand<TRoot>
-        where TRoot : IRoot
+    public interface ICommand
     {
         Guid RootId { get; }
 
