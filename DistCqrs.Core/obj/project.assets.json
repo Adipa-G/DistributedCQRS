@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "targets": {
     ".NETCoreApp,Version=v1.1": {
       "Libuv/1.9.1": {
@@ -7041,15 +7041,27 @@
   },
   "project": {
     "version": "1.0.0",
+    "restoreSettings": {
+      "hideWarningsAndErrors": true
+    },
     "restore": {
       "projectUniqueName": "Z:\\dev\\community\\github\\distributedCQRS\\DistCqrs.Core\\DistCqrs.Core.csproj",
       "projectName": "DistCqrs.Core",
       "projectPath": "Z:\\dev\\community\\github\\distributedCQRS\\DistCqrs.Core\\DistCqrs.Core.csproj",
+      "packagesPath": "C:\\Users\\adipa_000\\.nuget\\packages\\",
       "outputPath": "Z:\\dev\\community\\github\\distributedCQRS\\DistCqrs.Core\\obj\\",
       "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\adipa_000\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
       "originalTargetFrameworks": [
         "netcoreapp1.1"
       ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://www.nuget.org/api/v2/": {}
+      },
       "frameworks": {
         "netcoreapp1.1": {
           "projectReferences": {}

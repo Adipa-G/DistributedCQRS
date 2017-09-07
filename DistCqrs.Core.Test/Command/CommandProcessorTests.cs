@@ -18,16 +18,23 @@ namespace DistCqrs.Core.Test.Command
     {
         private IServiceLocator serviceLocator;
         private IRootTypeResolver rootTypeResolver;
+        private IUnitOfWorkFactory unitOfWorkFactory;
         private IEventStore eventStore;
         private IViewWriter viewWriter;
+
+        private IUnitOfWork unitOfWork;
 
         [SetUp]
         public void Init()
         {
             serviceLocator = Substitute.For<IServiceLocator>();
             rootTypeResolver = Substitute.For<IRootTypeResolver>();
+            unitOfWorkFactory = Substitute.For<IUnitOfWorkFactory>();
             eventStore = Substitute.For<IEventStore>();
             viewWriter = Substitute.For<IViewWriter>();
+
+            unitOfWork = Substitute.For<IUnitOfWork>();
+            unitOfWorkFactory.Create().Returns(unitOfWork);
 
             rootTypeResolver.GetRootType(Arg.Any<CreateAccountCommand>())
                 .Returns(typeof(Account));
@@ -97,6 +104,7 @@ namespace DistCqrs.Core.Test.Command
                 .ResolveEventHandler<Account, AccountCreatedEvent>();
             serviceLocator.Received(2)
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
+            
             Assert.IsNotNull(account);
             Assert.AreEqual(rootId, account.Id);
             Assert.AreEqual(15, account.Balance);
@@ -131,6 +139,10 @@ namespace DistCqrs.Core.Test.Command
                 .ResolveEventHandler<Account, AccountCreatedEvent>();
             serviceLocator.Received(1)
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
+
+            unitOfWorkFactory.Received(1).Create();
+            unitOfWork.Received(1).Complete();
+
             eventStore.Received(1).GetEvents<Account>(rootId);
             eventStore.Received(1).SaveEvents(Arg.Any<IList<IEvent<Account>>>());
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
@@ -138,8 +150,11 @@ namespace DistCqrs.Core.Test.Command
 
         private ICommandProcessor CreateSut()
         {
-            return new CommandProcessor(serviceLocator, rootTypeResolver,
-                eventStore, viewWriter);
+            return new CommandProcessor(serviceLocator,
+                rootTypeResolver,
+                unitOfWorkFactory,
+                eventStore,
+                viewWriter);
         }
     }
 }

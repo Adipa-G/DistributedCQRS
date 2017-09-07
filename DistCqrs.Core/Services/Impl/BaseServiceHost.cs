@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.Domain;
@@ -9,6 +10,9 @@ namespace DistCqrs.Core.Services.Impl
 {
     public abstract class BaseServiceHost : IServiceHost
     {
+        private readonly Dictionary<string, IService> services;
+        private readonly Dictionary<string, IBus> buses;
+
         private readonly ILog log;
         private readonly IServiceLocator serviceLocator;
 
@@ -17,6 +21,25 @@ namespace DistCqrs.Core.Services.Impl
         {
             this.log = log;
             this.serviceLocator = serviceLocator;
+
+            this.services = new Dictionary<string, IService>();
+            this.buses = new Dictionary<string, IBus>();
+        }
+
+        public abstract void PrepareExternalEntpoints();
+
+        public void RegisterService(IService service)
+        {
+            if (services.ContainsKey(service.Id))
+            {
+                throw new ServiceRegistrationException($"Service {service.Id} is already registered.");
+            }
+            services[service.Id] = service;
+        }
+
+        public void InitialiseServices()
+        {
+            throw new NotImplementedException();
         }
 
         public async Task CommandReceived<TRoot, TCmd>(TCmd cmd)

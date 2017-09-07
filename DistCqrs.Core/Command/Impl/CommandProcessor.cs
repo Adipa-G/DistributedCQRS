@@ -15,42 +15,52 @@ namespace DistCqrs.Core.Command.Impl
     {
         private readonly IServiceLocator serviceLocator;
         private readonly IRootTypeResolver rootTypeResolver;
+        private readonly IUnitOfWorkFactory unitOfWorkFactory;
         private readonly IEventStore eventStore;
         private readonly IViewWriter viewWriter;
 
         public CommandProcessor(IServiceLocator serviceLocator,
             IRootTypeResolver rootTypeResolver,
+            IUnitOfWorkFactory unitOfWorkFactory,
             IEventStore eventStore,
             IViewWriter viewWriter)
         {
             this.serviceLocator = serviceLocator;
             this.rootTypeResolver = rootTypeResolver;
+            this.unitOfWorkFactory = unitOfWorkFactory;
             this.eventStore = eventStore;
             this.viewWriter = viewWriter;
         }
 
         public async Task Process(ICommand cmd)
         {
-            var rootType = await eventStore.GetRootType(cmd.RootId) ??
-                           rootTypeResolver.GetRootType(cmd);
+            IRoot root;
 
-            var commandHandler = InvokeGeneric<object>(this,
-                "ResolveCommandHandler", new[] {rootType, cmd.GetType()});
-            if (commandHandler == null)
+            using (var unitOfWork = unitOfWorkFactory.Create())
             {
-                throw new ServiceLocationException(
-                    $"Cannot resolve service to process command of type {cmd.GetType().FullName}");
-            }
+                var rootType = await eventStore.GetRootType(cmd.RootId) ??
+                               rootTypeResolver.GetRootType(cmd);
 
-            var root = await GetRoot(rootType,cmd.RootId);
+                var commandHandler = InvokeGeneric<object>(this,
+                    "ResolveCommandHandler", new[] {rootType, cmd.GetType()});
+                if (commandHandler == null)
+                {
+                    throw new ServiceLocationException(
+                        $"Cannot resolve service to process command of type {cmd.GetType().FullName}");
+                }
 
-            IList events = (IList)await Invoke<dynamic>(commandHandler, "Handle",
-                new object[] { root, cmd });
+                root = await GetRoot(rootType,cmd.RootId);
+
+                IList events = (IList)await Invoke<dynamic>(commandHandler, "Handle",
+                    new object[] { root, cmd });
             
-            await InvokeGeneric<Task>(this, "SaveEvents",
-                new[] {rootType}, new object[] {events});
+                await InvokeGeneric<Task>(this, "SaveEvents",
+                    new[] {rootType}, new object[] {events});
 
-            await ApplyEvents(root, events);
+                await ApplyEvents(root, events);
+
+                await unitOfWork.Complete();
+            }
 
             await viewWriter.UpdateView(root);
         }
