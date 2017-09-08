@@ -6,12 +6,6 @@ namespace DistCqrs.Core.Services
     {
         string Id { get; }
 
-        IList<string> GetInputBusIds();
-
-        IList<string> GetOutputBusIds();
-
-        void RegisterInputBus(IBus bus);
-
-        void RegisterOutputBus(IBus bus);
+        void Init();
     }
 }

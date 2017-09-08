@@ -3,56 +3,46 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.Exceptions;
+using DistCqrs.Core.Resolve;
 
 namespace DistCqrs.Core.Services.Impl
 {
     public abstract class BaseService : IService, IBusSubscriber
     {
-        private readonly Dictionary<string,IBus> inputBuses;
-        private readonly Dictionary<string,IBus> outputBuses;
-
         private readonly ILog log;
+        private readonly IServiceLocator serviceLocator;
         private readonly ICommandProcessor commandProcessor;
-
-        protected BaseService(ILog log, ICommandProcessor commandProcessor)
-        {
-            this.log = log;
-            this.commandProcessor = commandProcessor;
-
-            inputBuses = new Dictionary<string, IBus>();
-            outputBuses = new Dictionary<string, IBus>();
-        }
 
         public string Id { get; protected set; }
 
-        public abstract IList<string> GetInputBusIds();
+        protected abstract IList<string> GetSubscriptionBusIds();
+        
+        protected abstract Task OnCommandProcessed(ICommand cmd);
 
-        public abstract IList<string> GetOutputBusIds();
+        protected abstract Task OnCommandError(ICommand cmd);
 
-        public abstract Task OnCommandProcessed(ICommand cmd);
-
-        public abstract Task OnCommandError(ICommand cmd);
-
-        public void RegisterInputBus(IBus bus)
+        protected BaseService(ILog log,
+            IServiceLocator serviceLocator,
+            ICommandProcessor commandProcessor)
         {
-            if (inputBuses.ContainsKey(bus.Id))
-            {
-                throw new BusRegistrationException($"Input bus {bus.Id} is already registered for service {Id}");
-            }
-            inputBuses[bus.Id] = bus;
+            this.log = log;
+            this.serviceLocator = serviceLocator;
+            this.commandProcessor = commandProcessor;
         }
 
-        public void RegisterOutputBus(IBus bus)
+        public void Init()
         {
-            if (inputBuses.ContainsKey(bus.Id))
+            foreach (var busId in GetSubscriptionBusIds())
             {
-                throw new BusRegistrationException($"Output bus {bus.Id} is already registered for service {Id}");
+                var bus = serviceLocator.ResolveBus(busId);
+                if (bus == null)
+                {
+                    throw new ServiceLocationException($"Unable to resolve bus {busId}");
+                }
+                bus.Subscribe(this);
             }
-
-            outputBuses[bus.Id] = bus;
-            bus.Subscribe(this);
         }
-
+        
         public async Task Receive(IBus srcBus, IBusMessage message)
         {
             // ReSharper disable once SuspiciousTypeConversion.Global
@@ -76,10 +66,10 @@ namespace DistCqrs.Core.Services.Impl
 
         protected async Task SendMessage(string busId, IBusMessage message)
         {
-            var bus = outputBuses[busId];
+            var bus = serviceLocator.ResolveBus(busId);
             if (bus == null)
             {
-                throw new BusRegistrationException($"Bus {busId} not registered for service {Id}");
+                throw new ServiceLocationException($"Unable to resolve bus {busId}");
             }
             await bus.Send(message);
         }

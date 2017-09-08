@@ -1,10 +1,15 @@
 ﻿using DistCqrs.Core.Command;
 using DistCqrs.Core.Domain;
+using DistCqrs.Core.Services;
 
 namespace DistCqrs.Core.Resolve
 {
     public interface IServiceLocator
     {
+        IBus ResolveBus(string busId);
+
+        IService ResolveService(string serviceId);
+
         ICommandHandler<TRoot, TCmd> ResolveCommandHandler<TRoot, TCmd>()
             where TRoot : IRoot, new()
             where TCmd : ICommand;

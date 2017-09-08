@@ -2,10 +2,6 @@
 {
     public interface IServiceHost
     {
-        void RegisterService(IService service);
-
-        void PrepareExternalEntpoints();
-
-        void InitialiseServices();
+        void Init(string[] serviceIds);
     }
 }
