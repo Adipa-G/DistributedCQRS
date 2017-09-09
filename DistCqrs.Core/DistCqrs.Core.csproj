@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
-</Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+  </ItemGroup>
+
+  </Project>
