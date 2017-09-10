@@ -5,9 +5,11 @@ namespace DistCqrs.Sample.Service.EventStore
 {
     public class Config
     {
-        private static IConfigurationRoot configuration; 
+        private const string ConnectionStringKey = "ConnectionString";
 
-        public Config()
+        private static readonly IConfigurationRoot configuration; 
+
+        static Config() 
         {
             if (configuration != null)
             {
@@ -17,5 +19,7 @@ namespace DistCqrs.Sample.Service.EventStore
                     .Build();
             }
         }
+
+        public static string ConnectionString => configuration[ConnectionStringKey];
     }
 }
