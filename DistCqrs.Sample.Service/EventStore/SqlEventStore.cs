@@ -13,8 +13,8 @@ namespace DistCqrs.Sample.Service.EventStore
     {
         static SqlEventStore()
         {
-            var createTable = @"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='CONTACT' AND XTYPE='U')
-                                CREATE TABLE [Contact](
+            var createTable = @"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='EventStore' AND XTYPE='U')
+                                CREATE TABLE [EventStore](
 		                            [Id] [bigint] IDENTITY(1,1) NOT NULL,
 		                            [RootId] uniqueidentifier NOT NULL,
 		                            [EventTimestamp] [timestamp] NOT NULL,
@@ -57,19 +57,86 @@ namespace DistCqrs.Sample.Service.EventStore
             return JsonConvert.DeserializeObject<IEvent<TRoot>>(data, settings);
         }
 
-        protected override Task Save(IList<IEventRecord> records)
+        protected override async Task Save(IList<IEventRecord> records)
         {
-            throw new NotImplementedException();
+            using (var con = new SqlConnection(Config.ConnectionString))
+            using (var tx = con.BeginTransaction())
+            {
+                var cmd = con.CreateCommand();
+                cmd.CommandText = @"INSERT INTO [dbo].[EventStore]
+                                           ([RootId]
+		                                   ,[EventTimestamp]
+                                           ,[DATA])
+                                     VALUES
+                                           (@rootId
+		                                   ,@eventTimeStamp
+		                                   ,@data)";
+                cmd.Prepare();
+
+                foreach (var record in records)
+                {
+                    cmd.Parameters.AddWithValue("@rootId", record.RootId);
+                    cmd.Parameters.AddWithValue("@eventTimeStamp", record.EventTimestamp);
+                    cmd.Parameters.AddWithValue("@data", record.Data);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                tx.Commit();
+            }
         }
 
-        protected override Task<IList<IEventRecord>> Load(Guid rootId)
+        protected override async Task<IList<IEventRecord>> Load(Guid rootId)
         {
-            throw new NotImplementedException();
+            IList<IEventRecord> records = new List<IEventRecord>();
+            using (var con = new SqlConnection(Config.ConnectionString))
+            {
+                var cmd = con.CreateCommand();
+                cmd.CommandText = @"SELECT [RootId],[EventTimestamp],[Data] 
+                                    FROM [dbo].[EventStore] WHERE [RootId] = @rootId
+                                    ORDER BY [EventTimestamp]";
+                cmd.Parameters.AddWithValue("rootId", rootId);
+
+                var resultSet = await cmd.ExecuteReaderAsync();
+                while (await resultSet.ReadAsync())
+                {
+                    var record = Create();
+
+                    record.RootId = await resultSet.GetFieldValueAsync<Guid>(0);
+                    record.EventTimestamp = await resultSet.GetFieldValueAsync<DateTime>(1);
+                    record.Data = await resultSet.GetFieldValueAsync<string>(2);
+                    records.Add(record);
+                }
+            }
+            return records;
         }
 
-        public override Task<Type> GetRootType(Guid rootId)
+        public override async Task<Type> GetRootType(Guid rootId)
         {
-            throw new NotImplementedException();
+            string data = string.Empty;
+            using (var con = new SqlConnection(Config.ConnectionString))
+            {
+                var cmd = con.CreateCommand();
+                cmd.CommandText = @"SELECT TOP(1) [Data] 
+                                    FROM [dbo].[EventStore] WHERE [RootId] = @rootId
+                                    ORDER BY [EventTimestamp]";
+                cmd.Parameters.AddWithValue("rootId", rootId);
+
+                var resultSet = await cmd.ExecuteReaderAsync();
+                if (await resultSet.ReadAsync())
+                {
+                    data = await resultSet.GetFieldValueAsync<string>(0);
+                }
+            }
+
+            var settings =
+                new JsonSerializerSettings()
+                {
+                    TypeNameHandling =
+                        TypeNameHandling.All
+                };
+
+            var type = JsonConvert.DeserializeObject(data, settings);
+            return type.GetType().GenericTypeArguments[0];
         }
     }
 }
