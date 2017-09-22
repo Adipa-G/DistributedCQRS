@@ -86,7 +86,7 @@ namespace DistCqrs.Core.Command.Impl
                 var evtHandler = InvokeGeneric<object>(this,
                     "ResolveEventHandler",
                     new[] {root.GetType(), evt.GetType()});
-                var applyMethod = evtHandler.GetType().GetMethod("Apply");
+                var applyMethod = evtHandler.GetType().GetTypeInfo().GetMethod("Apply");
                 
                 var task = (Task)applyMethod.Invoke(evtHandler, new[] { root, evt });
                 await task;
@@ -98,9 +98,8 @@ namespace DistCqrs.Core.Command.Impl
             Type[] types,
             object[] values = null)
         {
-            var method = src.GetType()
-                .GetMethod(methodName,
-                    BindingFlags.NonPublic | BindingFlags.Instance);
+            var method = src.GetType().GetTypeInfo().GetMethod(methodName,
+                BindingFlags.NonPublic | BindingFlags.Instance);
             var genericMethod = method.MakeGenericMethod(types);
 
             return (T)genericMethod.Invoke(src, values);
@@ -110,7 +109,7 @@ namespace DistCqrs.Core.Command.Impl
             string methodName,
             object[] values = null)
         {
-            var method = src.GetType().GetMethod(methodName);
+            var method = src.GetType().GetTypeInfo().GetMethod(methodName);
 
             return (T)method.Invoke(src, values);
         }

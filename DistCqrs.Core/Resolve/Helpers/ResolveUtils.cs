@@ -7,7 +7,7 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Resolve.Helpers
 {
-    public class ResolveUtils 
+    public class ResolveUtils
     {
         public static IDictionary<Type, Type> GetCommandToEntityMappings(Assembly[] assemblies)
         {
@@ -15,28 +15,29 @@ namespace DistCqrs.Core.Resolve.Helpers
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
-                    .Where(t => t.GetInterfaces().Any(
+                    .Where(t => t.GetTypeInfo().GetInterfaces().Any(
                                i => i.GenericTypeArguments.Length > 0 &&
                                     i.GetGenericTypeDefinition() ==
                                     typeof(ICommandHandler<,>))));
 
             var allCmds = assemblies.SelectMany(
                 a => a.GetTypes()
-                    .Where(t => t.GetInterfaces()
+                    .Where(t => t.GetTypeInfo().GetInterfaces()
                                .Contains(typeof(ICommand)))).ToList();
 
             foreach (var handlerType in allHandlers)
             {
-                var handlerInterfaceType = handlerType.GetInterfaces().Single(
-                    i => i.GenericTypeArguments.Length > 0 &&
-                         i.GetGenericTypeDefinition() ==
-                         typeof(ICommandHandler<,>));
+                var handlerInterfaceType = handlerType.GetTypeInfo()
+                    .GetInterfaces().Single(
+                        i => i.GenericTypeArguments.Length > 0 &&
+                             i.GetGenericTypeDefinition() ==
+                             typeof(ICommandHandler<,>));
 
                 foreach (var cmdType in allCmds)
                 {
                     if (handlerInterfaceType.GenericTypeArguments[1] == cmdType)
                     {
-                        mappings.Add(cmdType,handlerInterfaceType.GenericTypeArguments[0]);
+                        mappings.Add(cmdType, handlerInterfaceType.GenericTypeArguments[0]);
                     }
                 }
             }
@@ -51,17 +52,18 @@ namespace DistCqrs.Core.Resolve.Helpers
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
-                    .Where(t => t.GetInterfaces().Any(
+                    .Where(t => t.GetTypeInfo().GetInterfaces().Any(
                                i => i.GenericTypeArguments.Length > 0 &&
                                     i.GetGenericTypeDefinition() ==
                                     typeof(ICommandHandler<,>))));
 
             foreach (var handlerType in allHandlers)
             {
-                var handlerInterfaceType = handlerType.GetInterfaces().Single(
-                    i => i.GenericTypeArguments.Length > 0 &&
-                         i.GetGenericTypeDefinition() ==
-                         typeof(ICommandHandler<,>));
+                var handlerInterfaceType = handlerType.GetTypeInfo()
+                    .GetInterfaces().Single(
+                        i => i.GenericTypeArguments.Length > 0 &&
+                             i.GetGenericTypeDefinition() ==
+                             typeof(ICommandHandler<,>));
 
                 mappings.Add(new Tuple<Type, Type, Type>(
                     handlerInterfaceType.GenericTypeArguments[0],
@@ -79,17 +81,18 @@ namespace DistCqrs.Core.Resolve.Helpers
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
-                    .Where(t => t.GetInterfaces().Any(
+                    .Where(t => t.GetTypeInfo().GetInterfaces().Any(
                                i => i.GenericTypeArguments.Length > 0 &&
                                     i.GetGenericTypeDefinition() ==
                                     typeof(IEventHandler<,>))));
 
             foreach (var handlerType in allHandlers)
             {
-                var handlerInterfaceType = handlerType.GetInterfaces().Single(
-                    i => i.GenericTypeArguments.Length > 0 &&
-                         i.GetGenericTypeDefinition() ==
-                         typeof(IEventHandler<,>));
+                var handlerInterfaceType = handlerType.GetTypeInfo()
+                    .GetInterfaces().Single(
+                        i => i.GenericTypeArguments.Length > 0 &&
+                             i.GetGenericTypeDefinition() ==
+                             typeof(IEventHandler<,>));
 
                 mappings.Add(new Tuple<Type, Type, Type>(
                     handlerInterfaceType.GenericTypeArguments[0],
