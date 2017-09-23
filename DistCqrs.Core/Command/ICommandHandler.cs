@@ -4,7 +4,7 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Command
 {
-    public interface ICommandHandler<TRoot,in TCmd>
+    public interface ICommandHandler<TRoot, in TCmd>
         where TRoot : IRoot
         where TCmd : ICommand
     {

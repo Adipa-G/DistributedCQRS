@@ -49,11 +49,12 @@ namespace DistCqrs.Core.Command.Impl
                         $"Cannot resolve service to process command of type {cmd.GetType().FullName}");
                 }
 
-                root = await GetRoot(rootType,cmd.RootId);
+                root = await GetRoot(rootType, cmd.RootId);
 
-                IList events = (IList)await Invoke<dynamic>(commandHandler, "Handle",
-                    new object[] { root, cmd });
-            
+                IList events = (IList) await Invoke<dynamic>(commandHandler,
+                    "Handle",
+                    new object[] {root, cmd});
+
                 await InvokeGeneric<Task>(this, "SaveEvents",
                     new[] {rootType}, new object[] {events});
 
@@ -65,14 +66,14 @@ namespace DistCqrs.Core.Command.Impl
             await viewWriter.UpdateView(root);
         }
 
-        private async Task<IRoot> GetRoot(Type rootType,Guid rootId)
+        private async Task<IRoot> GetRoot(Type rootType, Guid rootId)
         {
-            var root = (IRoot)Activator.CreateInstance(rootType);
-            var events = (IList)await InvokeGeneric<dynamic>(this,
-                "GetEvents", new[] { rootType }, new object[] { rootId });
+            var root = (IRoot) Activator.CreateInstance(rootType);
+            var events = (IList) await InvokeGeneric<dynamic>(this,
+                "GetEvents", new[] {rootType}, new object[] {rootId});
 
             if (events.Count == 0)
-                return (IRoot)Activator.CreateInstance(rootType);
+                return (IRoot) Activator.CreateInstance(rootType);
 
             await ApplyEvents(root, events);
             return root;
@@ -86,9 +87,11 @@ namespace DistCqrs.Core.Command.Impl
                 var evtHandler = InvokeGeneric<object>(this,
                     "ResolveEventHandler",
                     new[] {root.GetType(), evt.GetType()});
-                var applyMethod = evtHandler.GetType().GetTypeInfo().GetMethod("Apply");
-                
-                var task = (Task)applyMethod.Invoke(evtHandler, new[] { root, evt });
+                var applyMethod = evtHandler.GetType().GetTypeInfo()
+                    .GetMethod("Apply");
+
+                var task =
+                    (Task) applyMethod.Invoke(evtHandler, new[] {root, evt});
                 await task;
             }
         }
@@ -102,7 +105,7 @@ namespace DistCqrs.Core.Command.Impl
                 BindingFlags.NonPublic | BindingFlags.Instance);
             var genericMethod = method.MakeGenericMethod(types);
 
-            return (T)genericMethod.Invoke(src, values);
+            return (T) genericMethod.Invoke(src, values);
         }
 
         private T Invoke<T>(object src,
@@ -111,7 +114,7 @@ namespace DistCqrs.Core.Command.Impl
         {
             var method = src.GetType().GetTypeInfo().GetMethod(methodName);
 
-            return (T)method.Invoke(src, values);
+            return (T) method.Invoke(src, values);
         }
 
         //wrappers to make refactor safe

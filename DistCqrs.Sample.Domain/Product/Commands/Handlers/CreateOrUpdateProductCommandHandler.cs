@@ -7,9 +7,11 @@ using DistCqrs.Sample.Domain.Product.Events;
 
 namespace DistCqrs.Sample.Domain.Product.Commands.Handlers
 {
-    public class CreateOrUpdateProductCommandHandler : ICommandHandler<Product,CreateOrUpdateProductCommand>
+    public class CreateOrUpdateProductCommandHandler : ICommandHandler<Product,
+        CreateOrUpdateProductCommand>
     {
-        public Task<IList<IEvent<Product>>> Handle(Product root, CreateOrUpdateProductCommand cmd)
+        public Task<IList<IEvent<Product>>> Handle(Product root,
+            CreateOrUpdateProductCommand cmd)
         {
             IList<IEvent<Product>> list = new List<IEvent<Product>>();
             if (root.Id == Guid.Empty)

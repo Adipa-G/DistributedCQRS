@@ -9,9 +9,10 @@ namespace DistCqrs.Core.Resolve.Helpers
 {
     public class ResolveUtils
     {
-        public static IDictionary<Type, Type> GetCommandToEntityMappings(Assembly[] assemblies)
+        public static IList<CommandToEntityMapping> GetCommandToEntityMappings(
+            Assembly[] assemblies)
         {
-            var mappings = new Dictionary<Type, Type>();
+            var mappings = new List<CommandToEntityMapping>();
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
@@ -37,7 +38,8 @@ namespace DistCqrs.Core.Resolve.Helpers
                 {
                     if (handlerInterfaceType.GenericTypeArguments[1] == cmdType)
                     {
-                        mappings.Add(cmdType, handlerInterfaceType.GenericTypeArguments[0]);
+                        mappings.Add(new CommandToEntityMapping(cmdType,
+                            handlerInterfaceType.GenericTypeArguments[0]));
                     }
                 }
             }
@@ -45,10 +47,10 @@ namespace DistCqrs.Core.Resolve.Helpers
             return mappings;
         }
 
-        public static IList<Tuple<Type, Type, Type>> GetCommandHandlerMappings(
+        public static IList<CommandHandlerMapping> GetCommandHandlerMappings(
             Assembly[] assemblies)
         {
-            var mappings = new List<Tuple<Type, Type, Type>>();
+            var mappings = new List<CommandHandlerMapping>();
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
@@ -65,7 +67,7 @@ namespace DistCqrs.Core.Resolve.Helpers
                              i.GetGenericTypeDefinition() ==
                              typeof(ICommandHandler<,>));
 
-                mappings.Add(new Tuple<Type, Type, Type>(
+                mappings.Add(new CommandHandlerMapping(
                     handlerInterfaceType.GenericTypeArguments[0],
                     handlerInterfaceType.GenericTypeArguments[1],
                     handlerType));
@@ -74,10 +76,10 @@ namespace DistCqrs.Core.Resolve.Helpers
             return mappings;
         }
 
-        public static IList<Tuple<Type, Type, Type>> GetEventHandlerMappings(
+        public static IList<EventHandlerMapping> GetEventHandlerMappings(
             Assembly[] assemblies)
         {
-            var mappings = new List<Tuple<Type, Type, Type>>();
+            var mappings = new List<EventHandlerMapping>();
 
             var allHandlers = assemblies.SelectMany(
                 a => a.GetTypes()
@@ -94,13 +96,47 @@ namespace DistCqrs.Core.Resolve.Helpers
                              i.GetGenericTypeDefinition() ==
                              typeof(IEventHandler<,>));
 
-                mappings.Add(new Tuple<Type, Type, Type>(
+                mappings.Add(new EventHandlerMapping(
                     handlerInterfaceType.GenericTypeArguments[0],
                     handlerInterfaceType.GenericTypeArguments[1],
                     handlerType));
             }
 
             return mappings;
+        }
+
+        public static IList<Dependency> GetDependencies(Assembly[] assemblies)
+        {
+            var dependencies = new List<Dependency>();
+
+            var classes = assemblies.SelectMany(
+                a => a.GetTypes()
+                    .Where(t => t.GetTypeInfo()
+                                    .GetCustomAttribute<DependencyAttribute
+                                    >() != null));
+
+            foreach (var @class in classes)
+            {
+                var interfaces = new List<Type>();
+
+                var curClass = @class;
+                while (curClass != typeof(Object))
+                {
+                    interfaces.AddRange(curClass.GetInterfaces());
+                    curClass = curClass.BaseType;
+                }
+                interfaces = interfaces.Distinct().ToList();
+                
+                foreach (var @interface in interfaces)
+                {
+                    if (dependencies.All(d => d.Interface != @interface))
+                    {
+                        dependencies.Add(new Dependency(@interface, @class));
+                    }
+                }
+            }
+
+            return dependencies;
         }
     }
 }

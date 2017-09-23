@@ -6,7 +6,7 @@ namespace DistCqrs.Sample.Domain.Product.Events
     {
         public ProductCreatedEvent(Guid rootId,
             string code,
-            string name, 
+            string name,
             double unitPrice) : base(rootId)
         {
             Code = code;

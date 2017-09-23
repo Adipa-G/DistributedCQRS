@@ -4,6 +4,6 @@ namespace DistCqrs.Sample.Service.View.Mappings
 {
     interface IMapping<T> where T : class
     {
-        void Map(EntityTypeBuilder<T> builder) ;
+        void Map(EntityTypeBuilder<T> builder);
     }
 }

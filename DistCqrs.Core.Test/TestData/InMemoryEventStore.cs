@@ -5,10 +5,13 @@ using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.EventStore.Impl;
+using DistCqrs.Core.Resolve;
+using DistCqrs.Core.Resolve.Helpers;
 using Newtonsoft.Json;
 
 namespace DistCqrs.Core.Test.TestData
 {
+    [Dependency]
     public class InMemoryEventStore : BaseEventStore
     {
         public List<IEventRecord> EventRecords { get; }
@@ -38,7 +41,8 @@ namespace DistCqrs.Core.Test.TestData
                            {
                                TypeNameHandling = TypeNameHandling.All
                            };
-            return (IEvent<TRoot>) JsonConvert.DeserializeObject(data, settings);
+            return (IEvent<TRoot>) JsonConvert.DeserializeObject(data,
+                settings);
         }
 
         protected override async Task Save(IList<IEventRecord> records)
@@ -49,7 +53,8 @@ namespace DistCqrs.Core.Test.TestData
 
         protected override async Task<IList<IEventRecord>> Load(Guid rootId)
         {
-            IList<IEventRecord> events = EventRecords.Where(er => er.RootId == rootId).ToList();
+            IList<IEventRecord> events =
+                EventRecords.Where(er => er.RootId == rootId).ToList();
             var result = await Task.FromResult(events);
             return result;
         }

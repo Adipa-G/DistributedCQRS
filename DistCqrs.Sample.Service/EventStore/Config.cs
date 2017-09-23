@@ -7,19 +7,20 @@ namespace DistCqrs.Sample.Service.EventStore
     {
         private const string ConnectionStringKey = "ConnectionString";
 
-        private static readonly IConfigurationRoot configuration; 
+        private static readonly IConfigurationRoot Configuration;
 
-        static Config() 
+        static Config()
         {
-            if (configuration != null)
+            if (Configuration != null)
             {
-                configuration = new ConfigurationBuilder()
+                Configuration = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build();
             }
         }
 
-        public static string ConnectionString => configuration[ConnectionStringKey];
+        public static string ConnectionString =>
+            Configuration[ConnectionStringKey];
     }
 }

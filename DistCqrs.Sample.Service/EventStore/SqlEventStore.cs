@@ -13,7 +13,8 @@ namespace DistCqrs.Sample.Service.EventStore
     {
         static SqlEventStore()
         {
-            var createTable = @"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='EventStore' AND XTYPE='U')
+            var createTable =
+                @"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='EventStore' AND XTYPE='U')
                                 CREATE TABLE [EventStore](
 		                            [Id] [bigint] IDENTITY(1,1) NOT NULL,
 		                            [RootId] uniqueidentifier NOT NULL,
@@ -76,7 +77,8 @@ namespace DistCqrs.Sample.Service.EventStore
                 foreach (var record in records)
                 {
                     cmd.Parameters.AddWithValue("@rootId", record.RootId);
-                    cmd.Parameters.AddWithValue("@eventTimeStamp", record.EventTimestamp);
+                    cmd.Parameters.AddWithValue("@eventTimeStamp",
+                        record.EventTimestamp);
                     cmd.Parameters.AddWithValue("@data", record.Data);
                     await cmd.ExecuteNonQueryAsync();
                 }
@@ -102,7 +104,8 @@ namespace DistCqrs.Sample.Service.EventStore
                     var record = Create();
 
                     record.RootId = await resultSet.GetFieldValueAsync<Guid>(0);
-                    record.EventTimestamp = await resultSet.GetFieldValueAsync<DateTime>(1);
+                    record.EventTimestamp =
+                        await resultSet.GetFieldValueAsync<DateTime>(1);
                     record.Data = await resultSet.GetFieldValueAsync<string>(2);
                     records.Add(record);
                 }

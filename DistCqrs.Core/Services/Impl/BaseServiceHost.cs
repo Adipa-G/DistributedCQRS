@@ -23,7 +23,8 @@ namespace DistCqrs.Core.Services.Impl
                 var service = serviceLocator.ResolveService(serviceId);
                 if (service == null)
                 {
-                    throw new ServiceLocationException($"Unable to resolve service {serviceId}");
+                    throw new ServiceLocationException(
+                        $"Unable to resolve service {serviceId}");
                 }
 
                 service.Init();

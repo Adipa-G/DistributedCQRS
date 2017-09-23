@@ -14,8 +14,16 @@ namespace DistCqrs.Sample.Service.Resolve
 
         public RootTypeResolver()
         {
+            this.mappings = new Dictionary<Type, Type>();
+
             var assemblies = new[] {typeof(BaseCommand).GetTypeInfo().Assembly};
-            mappings = ResolveUtils.GetCommandToEntityMappings(assemblies);
+            var commandToEntityMappings =
+                ResolveUtils.GetCommandToEntityMappings(assemblies);
+
+            foreach (var mapping in commandToEntityMappings)
+            {
+                mappings.Add(mapping.CommandType, mapping.EntityType);
+            }
         }
 
         public Type GetRootType(ICommand cmd)

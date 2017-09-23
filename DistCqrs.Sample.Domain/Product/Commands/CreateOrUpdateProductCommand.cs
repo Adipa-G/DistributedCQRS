@@ -14,10 +14,10 @@ namespace DistCqrs.Sample.Domain.Product.Commands
             UnitPrice = unitPrice;
         }
 
-        public string Code { get;  }
+        public string Code { get; }
 
-        public string Name { get;  }
+        public string Name { get; }
 
-        public double UnitPrice { get;  }
+        public double UnitPrice { get; }
     }
 }

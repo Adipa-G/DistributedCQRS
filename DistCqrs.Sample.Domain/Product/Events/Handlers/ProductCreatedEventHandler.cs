@@ -4,7 +4,8 @@ using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Sample.Domain.Product.Events.Handlers
 {
-    public class ProductCreatedEventHandler : IEventHandler<Product,ProductCreatedEvent>
+    public class
+        ProductCreatedEventHandler : IEventHandler<Product, ProductCreatedEvent>
     {
         public async Task Apply(Product root, ProductCreatedEvent evt)
         {

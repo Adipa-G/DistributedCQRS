@@ -16,7 +16,7 @@ namespace DistCqrs.Core.Services.Impl
         public string Id { get; protected set; }
 
         protected abstract IList<string> GetSubscriptionBusIds();
-        
+
         protected abstract Task OnCommandProcessed(ICommand cmd);
 
         protected abstract Task OnCommandError(ICommand cmd);
@@ -37,19 +37,21 @@ namespace DistCqrs.Core.Services.Impl
                 var bus = serviceLocator.ResolveBus(busId);
                 if (bus == null)
                 {
-                    throw new ServiceLocationException($"Unable to resolve bus {busId}");
+                    throw new ServiceLocationException(
+                        $"Unable to resolve bus {busId}");
                 }
                 bus.Subscribe(this);
             }
         }
-        
+
         public async Task Receive(IBus srcBus, IBusMessage message)
         {
             // ReSharper disable once SuspiciousTypeConversion.Global
             var cmd = message as ICommand;
             if (cmd == null)
             {
-                log.LogError($"Error while processing message {message} in service {Id}");
+                log.LogError(
+                    $"Error while processing message {message} in service {Id}");
             }
 
             try
@@ -59,7 +61,9 @@ namespace DistCqrs.Core.Services.Impl
             }
             catch (Exception ex)
             {
-                log.LogException($"Error while processing command {cmd} in service {Id}", ex);
+                log.LogException(
+                    $"Error while processing command {cmd} in service {Id}",
+                    ex);
                 await OnCommandError(cmd);
             }
         }
@@ -69,7 +73,8 @@ namespace DistCqrs.Core.Services.Impl
             var bus = serviceLocator.ResolveBus(busId);
             if (bus == null)
             {
-                throw new ServiceLocationException($"Unable to resolve bus {busId}");
+                throw new ServiceLocationException(
+                    $"Unable to resolve bus {busId}");
             }
             await bus.Send(message);
         }

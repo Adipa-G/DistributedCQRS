@@ -1,6 +1,5 @@
 artifacts/**/*.*
 **/node_modules/**/*.*
-**/obj/Debug/**/*.*
-**/bin/Debug/**/*.*
-**/obj/**
+**/obj/**/*.*
+**/bin/**/*.*
 .vs/**

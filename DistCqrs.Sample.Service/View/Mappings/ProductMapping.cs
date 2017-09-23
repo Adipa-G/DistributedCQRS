@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DistCqrs.Sample.Service.View.Mappings
 {
-    public class ProductMapping  : IMapping<Product>
+    public class ProductMapping : IMapping<Product>
     {
         public void Map(EntityTypeBuilder<Product> builder)
         {

@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistCqrs.Sample.Domain", "D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistCqrs.Sample.Service", "DistCqrs.Sample.Service\DistCqrs.Sample.Service.csproj", "{D9A70E32-18FA-483E-9335-30617F90ED76}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistCqrs.Sample.Service.Product", "DistCqrs.Sample.Service.Product\DistCqrs.Sample.Service.Product.csproj", "{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{D9A70E32-18FA-483E-9335-30617F90ED76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9A70E32-18FA-483E-9335-30617F90ED76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9A70E32-18FA-483E-9335-30617F90ED76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +48,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CD738BB0-B4D4-4F10-8358-6C27756DD891} = {2BE469FC-DD33-41A3-9632-A3FAD7436800}
 		{D9A70E32-18FA-483E-9335-30617F90ED76} = {2BE469FC-DD33-41A3-9632-A3FAD7436800}
+		{967093F9-8CD3-4F33-B96B-A1CC6F76CAD5} = {2BE469FC-DD33-41A3-9632-A3FAD7436800}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B521A89-2ADA-4308-A420-01110B176795}

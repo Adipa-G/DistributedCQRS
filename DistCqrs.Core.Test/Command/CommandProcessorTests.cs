@@ -104,7 +104,7 @@ namespace DistCqrs.Core.Test.Command
                 .ResolveEventHandler<Account, AccountCreatedEvent>();
             serviceLocator.Received(2)
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
-            
+
             Assert.IsNotNull(account);
             Assert.AreEqual(rootId, account.Id);
             Assert.AreEqual(15, account.Balance);
@@ -144,7 +144,8 @@ namespace DistCqrs.Core.Test.Command
             unitOfWork.Received(1).Complete();
 
             eventStore.Received(1).GetEvents<Account>(rootId);
-            eventStore.Received(1).SaveEvents(Arg.Any<IList<IEvent<Account>>>());
+            eventStore.Received(1)
+                .SaveEvents(Arg.Any<IList<IEvent<Account>>>());
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
         }
 
