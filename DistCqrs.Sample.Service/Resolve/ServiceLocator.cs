@@ -13,6 +13,7 @@ using DistCqrs.Sample.Domain;
 
 namespace DistCqrs.Sample.Service.Resolve
 {
+    [ServiceRegistration(ServiceRegistrationType.Singleton)]
     public class ServiceLocator : IServiceLocator, IServiceRegister
     {
         private readonly IList<CommandHandlerMapping> commandHandlerMappings;

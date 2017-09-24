@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace DistCqrs.Sample.Service.Product
+namespace DistCqrs.Sample.WebApi.Product
 {
     public class Program
     {

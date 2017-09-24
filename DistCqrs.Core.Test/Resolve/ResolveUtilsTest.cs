@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reflection;
 using DistCqrs.Core.EventStore;
+using DistCqrs.Core.Resolve;
 using DistCqrs.Core.Resolve.Helpers;
 using DistCqrs.Core.Test.TestData;
 using NUnit.Framework;
@@ -75,7 +76,8 @@ namespace DistCqrs.Core.Test.Resolve
 
             Assert.IsTrue(dependencies.Any(
                 d => d.Interface == typeof(IEventStore) &&
-                     d.Implementation == typeof(InMemoryEventStore)));
+                     d.Implementation == typeof(InMemoryEventStore) &&
+                     d.RegistrationType == ServiceRegistrationType.Scope));
         }
     }
 }

@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.EventStore.Impl;
+using DistCqrs.Core.Resolve;
 using Newtonsoft.Json;
 
 namespace DistCqrs.Sample.Service.EventStore
 {
+    [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class SqlEventStore : BaseEventStore
     {
         static SqlEventStore()

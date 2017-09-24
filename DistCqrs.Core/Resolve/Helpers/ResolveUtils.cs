@@ -112,12 +112,14 @@ namespace DistCqrs.Core.Resolve.Helpers
             var classes = assemblies.SelectMany(
                 a => a.GetTypes()
                     .Where(t => t.GetTypeInfo()
-                                    .GetCustomAttribute<DependencyAttribute
+                                    .GetCustomAttribute<ServiceRegistrationAttribute
                                     >() != null));
 
             foreach (var @class in classes)
             {
                 var interfaces = new List<Type>();
+                var attribute = @class.GetTypeInfo()
+                    .GetCustomAttribute<ServiceRegistrationAttribute>();
 
                 var curClass = @class;
                 while (curClass != typeof(Object))
@@ -131,7 +133,8 @@ namespace DistCqrs.Core.Resolve.Helpers
                 {
                     if (dependencies.All(d => d.Interface != @interface))
                     {
-                        dependencies.Add(new Dependency(@interface, @class));
+                        dependencies.Add(new Dependency(@interface, @class,
+                            attribute.RegistrationType));
                     }
                 }
             }

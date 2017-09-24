@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace DistCqrs.Core.Test.TestData
 {
-    [Dependency]
+    [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class InMemoryEventStore : BaseEventStore
     {
         public List<IEventRecord> EventRecords { get; }
