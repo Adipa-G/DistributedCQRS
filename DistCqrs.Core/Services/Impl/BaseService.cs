@@ -11,8 +11,7 @@ namespace DistCqrs.Core.Services.Impl
     {
         private readonly ILog log;
         private readonly IServiceLocator serviceLocator;
-        private readonly ICommandProcessor commandProcessor;
-
+       
         public string Id { get; protected set; }
 
         protected abstract IList<string> GetSubscriptionBusIds();
@@ -22,12 +21,10 @@ namespace DistCqrs.Core.Services.Impl
         protected abstract Task OnCommandError(ICommand cmd);
 
         protected BaseService(ILog log,
-            IServiceLocator serviceLocator,
-            ICommandProcessor commandProcessor)
+            IServiceLocator serviceLocator)
         {
             this.log = log;
             this.serviceLocator = serviceLocator;
-            this.commandProcessor = commandProcessor;
         }
 
         public void Init()
@@ -56,6 +53,9 @@ namespace DistCqrs.Core.Services.Impl
 
             try
             {
+                var commandProcessor =
+                    serviceLocator.Resolve<ICommandProcessor>();
+
                 await commandProcessor.Process(cmd);
                 await OnCommandProcessed(cmd);
             }

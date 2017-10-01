@@ -30,7 +30,7 @@ namespace DistCqrs.Sample.WebApi.Product
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> Create(ProductModel model)
+        public async Task<IActionResult> Create([FromBody]ProductModel model)
         {
             model.Id = Guid.NewGuid();
             
@@ -42,7 +42,7 @@ namespace DistCqrs.Sample.WebApi.Product
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id,ProductModel model)
+        public async Task<IActionResult> Update(Guid id, [FromBody]ProductModel model)
         {
             model.Id = id;
 

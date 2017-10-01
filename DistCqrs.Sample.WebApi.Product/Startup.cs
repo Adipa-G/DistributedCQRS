@@ -1,12 +1,19 @@
-﻿using DistCqrs.Core.Exceptions;
+﻿using System;
+using DistCqrs.Core.Command;
+using DistCqrs.Core.Command.Impl;
+using DistCqrs.Core.Domain;
+using DistCqrs.Core.Exceptions;
 using DistCqrs.Core.Resolve;
 using DistCqrs.Core.Resolve.Helpers;
 using DistCqrs.Core.Services.Impl;
+using DistCqrs.Sample.Domain.Product.View;
 using DistCqrs.Sample.Service;
 using DistCqrs.Sample.Service.Log;
 using DistCqrs.Sample.Service.Product;
+using DistCqrs.Sample.Service.Product.View;
 using DistCqrs.Sample.Service.Resolve;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DistCqrs.Sample.WebApi.Product
@@ -16,9 +23,6 @@ namespace DistCqrs.Sample.WebApi.Product
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigureIOC(services);
-
-            InitLog(services);
-            RegisterBuses(services);
             
             services.AddMvc();
         }
@@ -26,12 +30,28 @@ namespace DistCqrs.Sample.WebApi.Product
         public void Configure(IApplicationBuilder app)
         {
             app.UseMvc();
+
+            var log = app.ApplicationServices.GetService<ILogStart>();
+            log.Init();
+
+            var productView = app.ApplicationServices.GetService<IProductView>() as ProductDbContext;
+            productView.Database.Migrate();
+
+            var locator = app.ApplicationServices.GetService<IServiceLocator>() as ServiceLocator;
+            locator.Init(app.ApplicationServices);
+            locator.Register(new InternalBus(Constants.BusId));
+            
+            var productService = app.ApplicationServices.GetService<IProductService>();
+            locator.Register(productService);
+            productService.Init();
         }
 
         private static void ConfigureIOC(IServiceCollection services)
         {
             var assemblies = new[]
                              {
+                                 typeof(CommandProcessor).Assembly,
+                                 typeof(Domain.Product.Product).Assembly,
                                  typeof(Startup).Assembly,
                                  typeof(ProductService).Assembly,
                                  typeof(Config).Assembly
@@ -54,22 +74,26 @@ namespace DistCqrs.Sample.WebApi.Product
                             $"Unknown registration type {reg.RegistrationType}");
                 }
             }
-        }
 
-        private static void InitLog(IServiceCollection services)
-        {
-            var sp = services.BuildServiceProvider();
-            var log = sp.GetService<ILogStart>();
+            var commandHandlerMappings =
+                ResolveUtils.GetCommandHandlerMappings(assemblies);
+            foreach (var mapping in commandHandlerMappings)
+            {
+                var cmdHanderInterface =
+                    typeof(ICommandHandler<,>).MakeGenericType(
+                        mapping.EntityType, mapping.CommandType);
+                services.AddScoped(cmdHanderInterface, mapping.CommandHandlerType);
+            }
 
-            log.Init();
-        }
-
-        private static void RegisterBuses(IServiceCollection services)
-        {
-            var sp = services.BuildServiceProvider();
-            var register = sp.GetService<IServiceRegister>();
-
-            register.Register(new InternalBus(Constants.BusId));
+            var eventHandlerMappings =
+                ResolveUtils.GetEventHandlerMappings(assemblies);
+            foreach (var mapping in eventHandlerMappings)
+            {
+                var eventHandlerInterface =
+                    typeof(IEventHandler<,>).MakeGenericType(
+                        mapping.EntityType, mapping.EventType);
+                services.AddScoped(eventHandlerInterface, mapping.EventHandlerType);
+            }
         }
     }
 }

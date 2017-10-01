@@ -6,6 +6,8 @@ namespace DistCqrs.Core.Resolve
 {
     public interface IServiceLocator
     {
+        T Resolve<T>();
+
         IBus ResolveBus(string busId);
 
         IService ResolveService(string serviceId);
@@ -17,5 +19,9 @@ namespace DistCqrs.Core.Resolve
         IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>()
             where TRoot : IRoot, new()
             where TEvent : IEvent<TRoot>;
+
+        void Register(IBus bus);
+
+        void Register(IService service);
     }
 }

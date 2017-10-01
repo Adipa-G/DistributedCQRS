@@ -117,6 +117,11 @@ namespace DistCqrs.Core.Resolve.Helpers
 
             foreach (var @class in classes)
             {
+                if (@class.IsAbstract)
+                {
+                    continue;
+                }
+
                 var interfaces = new List<Type>();
                 var attribute = @class.GetTypeInfo()
                     .GetCustomAttribute<ServiceRegistrationAttribute>();

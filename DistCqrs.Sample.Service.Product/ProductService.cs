@@ -8,15 +8,14 @@ using DistCqrs.Core.Services.Impl;
 
 namespace DistCqrs.Sample.Service.Product
 {
-    [ServiceRegistration(ServiceRegistrationType.Scope)]
-    public class ProductService : BaseService
+    [ServiceRegistration(ServiceRegistrationType.Singleton)]
+    public class ProductService : BaseService, IProductService
     {
         public ProductService(ILog log,
-            IServiceLocator serviceLocator,
-            ICommandProcessor commandProcessor) : base(log,
-                serviceLocator,
-                commandProcessor)
+            IServiceLocator serviceLocator) : base(log,
+                serviceLocator)
         {
+            this.Id = Constants.ServiceId;
         }
 
         protected override IList<string> GetSubscriptionBusIds()

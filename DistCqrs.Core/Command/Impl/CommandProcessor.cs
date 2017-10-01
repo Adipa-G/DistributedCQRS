@@ -11,6 +11,7 @@ using DistCqrs.Core.View;
 
 namespace DistCqrs.Core.Command.Impl
 {
+    [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class CommandProcessor : ICommandProcessor
     {
         private readonly IServiceLocator serviceLocator;
@@ -18,7 +19,7 @@ namespace DistCqrs.Core.Command.Impl
         private readonly IUnitOfWorkFactory unitOfWorkFactory;
         private readonly IEventStore eventStore;
         private readonly IViewWriter viewWriter;
-
+        
         public CommandProcessor(IServiceLocator serviceLocator,
             IRootTypeResolver rootTypeResolver,
             IUnitOfWorkFactory unitOfWorkFactory,

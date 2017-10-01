@@ -27,7 +27,7 @@ namespace DistCqrs.Sample.Service.Product.View
         public async Task<ProductModel> GetById(Guid id)
         {
             var product = await Set<Domain.Product.Product>()
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
             return Convert(product);
         }
 

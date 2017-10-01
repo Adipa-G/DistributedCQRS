@@ -1,37 +1,31 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.Exceptions;
 using DistCqrs.Core.Resolve;
 using DistCqrs.Core.Resolve.Helpers;
 using DistCqrs.Core.Services;
-using DistCqrs.Sample.Domain;
 
 namespace DistCqrs.Sample.Service.Resolve
 {
-    [ServiceRegistration(ServiceRegistrationType.Singleton)]
-    public class ServiceLocator : IServiceLocator, IServiceRegister
+    public abstract class BaseServiceLocator : IServiceLocator
     {
-        private readonly IList<CommandHandlerMapping> commandHandlerMappings;
-        private readonly IList<EventHandlerMapping> eventHandlerMappings;
         private readonly IDictionary<string, IBus> buses;
         private readonly IDictionary<string, IService> services;
 
-        public ServiceLocator()
+        protected BaseServiceLocator()
         {
             buses = new ConcurrentDictionary<string, IBus>();
             services = new ConcurrentDictionary<string, IService>();
+        }
 
-            var assemblies = new[] {typeof(BaseCommand).GetTypeInfo().Assembly};
+        protected abstract object Resolve(Type @interface);
 
-            commandHandlerMappings =
-                ResolveUtils.GetCommandHandlerMappings(assemblies);
-            eventHandlerMappings =
-                ResolveUtils.GetEventHandlerMappings(assemblies);
+        public T Resolve<T>()
+        {
+            return (T) Resolve(typeof(T));
         }
 
         public IBus ResolveBus(string busId)
@@ -57,22 +51,15 @@ namespace DistCqrs.Sample.Service.Resolve
         public ICommandHandler<TRoot, TCmd> ResolveCommandHandler<TRoot, TCmd>()
             where TRoot : IRoot, new() where TCmd : ICommand
         {
-            var handler = commandHandlerMappings
-                .Where(m => m.EntityType == typeof(TRoot) && m.CommandType == typeof(TCmd))
-                .Select(m => m.CommandHandlerType);
-
-            return (ICommandHandler<TRoot, TCmd>) handler;
+            return (ICommandHandler<TRoot, TCmd>) Resolve(
+                typeof(ICommandHandler<TRoot, TCmd>));
         }
 
         public IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>()
             where TRoot : IRoot, new() where TEvent : IEvent<TRoot>
         {
-            var handler = eventHandlerMappings
-                .Where(m => m.EntityType == typeof(TRoot) &&
-                            m.EventType == typeof(TEvent))
-                .Select(m => m.EventHandlerType);
-
-            return (IEventHandler<TRoot, TEvent>) handler;
+            return (IEventHandler<TRoot, TEvent>)Resolve(
+                typeof(IEventHandler<TRoot, TEvent>));
         }
 
         public void Register(IBus bus)

@@ -13,6 +13,7 @@ namespace DistCqrs.Sample.Domain.Product.Events.Handlers
             root.Code = evt.Code;
             root.Name = evt.Name;
             root.UnitPrice = evt.UnitPrice;
+            root.Id = evt.RootId;
             await Task.CompletedTask;
         }
     }

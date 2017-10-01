@@ -8,6 +8,7 @@ using DistCqrs.Sample.Domain;
 
 namespace DistCqrs.Sample.Service.Resolve
 {
+    [ServiceRegistration(ServiceRegistrationType.Singleton)]
     public class RootTypeResolver : IRootTypeResolver
     {
         private readonly IDictionary<Type, Type> mappings;
@@ -16,7 +17,7 @@ namespace DistCqrs.Sample.Service.Resolve
         {
             this.mappings = new Dictionary<Type, Type>();
 
-            var assemblies = new[] {typeof(BaseCommand).GetTypeInfo().Assembly};
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             var commandToEntityMappings =
                 ResolveUtils.GetCommandToEntityMappings(assemblies);
 

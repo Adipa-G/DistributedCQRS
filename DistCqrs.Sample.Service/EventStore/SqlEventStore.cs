@@ -20,13 +20,15 @@ namespace DistCqrs.Sample.Service.EventStore
                                 CREATE TABLE [EventStore](
 		                            [Id] [bigint] IDENTITY(1,1) NOT NULL,
 		                            [RootId] uniqueidentifier NOT NULL,
-		                            [EventTimestamp] [timestamp] NOT NULL,
+		                            [EventTimestamp] [datetime] NOT NULL,
 		                            [DATA] [nvarchar](max) NOT NULL
 		                            PRIMARY KEY ([Id] ASC)
 	                            ) ON [PRIMARY]";
 
             using (var con = new SqlConnection(Config.ConnectionString))
             {
+                con.OpenAsync();
+
                 var cmd = con.CreateCommand();
                 cmd.CommandText = createTable;
                 cmd.ExecuteNonQuery();
@@ -63,10 +65,13 @@ namespace DistCqrs.Sample.Service.EventStore
         protected override async Task Save(IList<IEventRecord> records)
         {
             using (var con = new SqlConnection(Config.ConnectionString))
-            using (var tx = con.BeginTransaction())
             {
-                var cmd = con.CreateCommand();
-                cmd.CommandText = @"INSERT INTO [dbo].[EventStore]
+                await con.OpenAsync();
+                using (var tx = con.BeginTransaction())
+                {
+                    var cmd = con.CreateCommand();
+                    cmd.Transaction = tx;
+                    cmd.CommandText = @"INSERT INTO [dbo].[EventStore]
                                            ([RootId]
 		                                   ,[EventTimestamp]
                                            ,[DATA])
@@ -74,18 +79,19 @@ namespace DistCqrs.Sample.Service.EventStore
                                            (@rootId
 		                                   ,@eventTimeStamp
 		                                   ,@data)";
-                cmd.Prepare();
+                    cmd.Prepare();
 
-                foreach (var record in records)
-                {
-                    cmd.Parameters.AddWithValue("@rootId", record.RootId);
-                    cmd.Parameters.AddWithValue("@eventTimeStamp",
-                        record.EventTimestamp);
-                    cmd.Parameters.AddWithValue("@data", record.Data);
-                    await cmd.ExecuteNonQueryAsync();
+                    foreach (var record in records)
+                    {
+                        cmd.Parameters.AddWithValue("@rootId", record.RootId);
+                        cmd.Parameters.AddWithValue("@eventTimeStamp",
+                            record.EventTimestamp);
+                        cmd.Parameters.AddWithValue("@data", record.Data);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    tx.Commit();
                 }
-
-                tx.Commit();
             }
         }
 
@@ -94,6 +100,8 @@ namespace DistCqrs.Sample.Service.EventStore
             IList<IEventRecord> records = new List<IEventRecord>();
             using (var con = new SqlConnection(Config.ConnectionString))
             {
+                await con.OpenAsync();
+
                 var cmd = con.CreateCommand();
                 cmd.CommandText = @"SELECT [RootId],[EventTimestamp],[Data] 
                                     FROM [dbo].[EventStore] WHERE [RootId] = @rootId
@@ -120,6 +128,8 @@ namespace DistCqrs.Sample.Service.EventStore
             string data = string.Empty;
             using (var con = new SqlConnection(Config.ConnectionString))
             {
+                await con.OpenAsync();
+
                 var cmd = con.CreateCommand();
                 cmd.CommandText = @"SELECT TOP(1) [Data] 
                                     FROM [dbo].[EventStore] WHERE [RootId] = @rootId
@@ -141,7 +151,7 @@ namespace DistCqrs.Sample.Service.EventStore
                 };
 
             var type = JsonConvert.DeserializeObject(data, settings);
-            return type.GetType().GenericTypeArguments[0];
+            return type?.GetType().BaseType.GenericTypeArguments[0];
         }
     }
 }
