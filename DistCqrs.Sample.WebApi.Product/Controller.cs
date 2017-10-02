@@ -12,8 +12,8 @@ namespace DistCqrs.Sample.WebApi.Product
     [Route("api/product")]
     public class Controller
     {
-        private readonly IServiceLocator serviceLocator;
         private readonly IProductView productView;
+        private readonly IServiceLocator serviceLocator;
 
         public Controller(IServiceLocator serviceLocator,
             IProductView productView)
@@ -30,10 +30,10 @@ namespace DistCqrs.Sample.WebApi.Product
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> Create([FromBody]ProductModel model)
+        public async Task<IActionResult> Create([FromBody] ProductModel model)
         {
             model.Id = Guid.NewGuid();
-            
+
             var bus = serviceLocator.ResolveBus(Constants.BusId);
             await bus.Send(new CreateOrUpdateProductCommand(model.Id,
                 model.Code, model.Name, model.UnitPrice));
@@ -42,7 +42,8 @@ namespace DistCqrs.Sample.WebApi.Product
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody]ProductModel model)
+        public async Task<IActionResult> Update(Guid id,
+            [FromBody] ProductModel model)
         {
             model.Id = id;
 

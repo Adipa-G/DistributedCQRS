@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.Resolve;
 using DistCqrs.Core.View;
-using DistCqrs.Sample.Domain.Product.View;
 using DistCqrs.Sample.Service.Product.View;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +16,8 @@ namespace DistCqrs.Sample.WebApi.Product
             {
                 var set = context.Set<Domain.Product.Product>();
 
-                var existing = await set.SingleOrDefaultAsync(p => p.Id == root.Id);
+                var existing =
+                    await set.SingleOrDefaultAsync(p => p.Id == root.Id);
                 if (existing != null)
                 {
                     set.Remove(existing);

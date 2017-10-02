@@ -7,13 +7,13 @@ namespace DistCqrs.Core.Services.Impl
     {
         private readonly IList<IBusSubscriber> subscribers;
 
-        public string Id { get; }
-
         public InternalBus(string id)
         {
             Id = id;
             subscribers = new List<IBusSubscriber>();
         }
+
+        public string Id { get; }
 
         public void Subscribe(IBusSubscriber subscriber)
         {
@@ -23,9 +23,7 @@ namespace DistCqrs.Core.Services.Impl
         public async Task Send(IBusMessage message)
         {
             foreach (var subscriber in subscribers)
-            {
                 await subscriber.Receive(this, message);
-            }
         }
     }
 }

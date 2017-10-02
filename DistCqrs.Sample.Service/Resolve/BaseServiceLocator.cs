@@ -5,7 +5,6 @@ using DistCqrs.Core.Command;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.Exceptions;
 using DistCqrs.Core.Resolve;
-using DistCqrs.Core.Resolve.Helpers;
 using DistCqrs.Core.Services;
 
 namespace DistCqrs.Sample.Service.Resolve
@@ -21,8 +20,6 @@ namespace DistCqrs.Sample.Service.Resolve
             services = new ConcurrentDictionary<string, IService>();
         }
 
-        protected abstract object Resolve(Type @interface);
-
         public T Resolve<T>()
         {
             return (T) Resolve(typeof(T));
@@ -31,20 +28,16 @@ namespace DistCqrs.Sample.Service.Resolve
         public IBus ResolveBus(string busId)
         {
             if (!buses.ContainsKey(busId))
-            {
                 throw new ServiceLocationException(
                     $"Bus {busId} is not registered.");
-            }
             return buses[busId];
         }
 
         public IService ResolveService(string serviceId)
         {
             if (!services.ContainsKey(serviceId))
-            {
                 throw new ServiceLocationException(
                     $"Service {serviceId} is not registered.");
-            }
             return services[serviceId];
         }
 
@@ -58,28 +51,26 @@ namespace DistCqrs.Sample.Service.Resolve
         public IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>()
             where TRoot : IRoot, new() where TEvent : IEvent<TRoot>
         {
-            return (IEventHandler<TRoot, TEvent>)Resolve(
+            return (IEventHandler<TRoot, TEvent>) Resolve(
                 typeof(IEventHandler<TRoot, TEvent>));
         }
 
         public void Register(IBus bus)
         {
             if (buses.ContainsKey(bus.Id))
-            {
                 throw new ServiceRegistrationException(
                     $"Bus {bus.Id} is already registered.");
-            }
             buses.Add(bus.Id, bus);
         }
 
         public void Register(IService service)
         {
             if (services.ContainsKey(service.Id))
-            {
                 throw new ServiceRegistrationException(
                     $"Service {service.Id} is already registered.");
-            }
             services.Add(service.Id, service);
         }
+
+        protected abstract object Resolve(Type @interface);
     }
 }

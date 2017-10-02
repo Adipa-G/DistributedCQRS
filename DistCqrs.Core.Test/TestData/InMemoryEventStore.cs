@@ -6,7 +6,6 @@ using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.EventStore.Impl;
 using DistCqrs.Core.Resolve;
-using DistCqrs.Core.Resolve.Helpers;
 using Newtonsoft.Json;
 
 namespace DistCqrs.Core.Test.TestData
@@ -14,12 +13,12 @@ namespace DistCqrs.Core.Test.TestData
     [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class InMemoryEventStore : BaseEventStore
     {
-        public List<IEventRecord> EventRecords { get; }
-
         public InMemoryEventStore()
         {
             EventRecords = new List<IEventRecord>();
         }
+
+        public List<IEventRecord> EventRecords { get; }
 
         protected override IEventRecord Create()
         {
@@ -28,7 +27,7 @@ namespace DistCqrs.Core.Test.TestData
 
         protected override string Serialize<TRoot>(IEvent<TRoot> evt)
         {
-            var settings = new JsonSerializerSettings()
+            var settings = new JsonSerializerSettings
                            {
                                TypeNameHandling = TypeNameHandling.All
                            };
@@ -37,7 +36,7 @@ namespace DistCqrs.Core.Test.TestData
 
         protected override IEvent<TRoot> DeSerialize<TRoot>(string data)
         {
-            var settings = new JsonSerializerSettings()
+            var settings = new JsonSerializerSettings
                            {
                                TypeNameHandling = TypeNameHandling.All
                            };

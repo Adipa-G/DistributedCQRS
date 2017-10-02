@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Test.TestData

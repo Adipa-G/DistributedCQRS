@@ -16,14 +16,6 @@ namespace DistCqrs.Core.Test.Command
     [TestFixture]
     public class CommandProcessorTests
     {
-        private IServiceLocator serviceLocator;
-        private IRootTypeResolver rootTypeResolver;
-        private IUnitOfWorkFactory unitOfWorkFactory;
-        private IEventStore eventStore;
-        private IViewWriter viewWriter;
-
-        private IUnitOfWork unitOfWork;
-
         [SetUp]
         public void Init()
         {
@@ -55,59 +47,21 @@ namespace DistCqrs.Core.Test.Command
                 .Returns(new AccountBalanceUpdatedEventHandler());
         }
 
-        [Test]
-        public void
-            GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
+        private IServiceLocator serviceLocator;
+        private IRootTypeResolver rootTypeResolver;
+        private IUnitOfWorkFactory unitOfWorkFactory;
+        private IEventStore eventStore;
+        private IViewWriter viewWriter;
+
+        private IUnitOfWork unitOfWork;
+
+        private ICommandProcessor CreateSut()
         {
-            serviceLocator
-                .ResolveCommandHandler<Account, CreateAccountCommand>()
-                .Returns((ICommandHandler<Account, CreateAccountCommand>) null);
-
-            var sut = CreateSut();
-
-            Assert.That(() => sut.Process(new CreateAccountCommand()),
-                Throws.TypeOf<ServiceLocationException>());
-        }
-
-        [Test]
-        public void GivenCommand_WhenProcess_ThenLoadRoot()
-        {
-            var rootId = Guid.NewGuid();
-            Account account = null;
-
-            var events = new List<IEvent<Account>>();
-            events.Add(new AccountCreatedEvent() {RootId = rootId});
-            events.Add(
-                new AccountBalanceUpdatedEvent()
-                {
-                    RootId = rootId,
-                    Change = 10
-                });
-
-            eventStore.GetRootType(rootId).Returns(typeof(Account));
-
-            eventStore.GetEvents<Account>(rootId).Returns(events);
-
-            viewWriter.When(r => r.UpdateView(Arg.Any<Account>()))
-                .Do(r => account = r.Arg<Account>());
-
-            var cmd = new UpdateAccountBalanceCommand()
-                      {
-                          RootId = rootId,
-                          Change = 5
-                      };
-
-            var sut = CreateSut();
-            sut.Process(cmd);
-
-            serviceLocator.Received(1)
-                .ResolveEventHandler<Account, AccountCreatedEvent>();
-            serviceLocator.Received(2)
-                .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
-
-            Assert.IsNotNull(account);
-            Assert.AreEqual(rootId, account.Id);
-            Assert.AreEqual(15, account.Balance);
+            return new CommandProcessor(serviceLocator,
+                rootTypeResolver,
+                unitOfWorkFactory,
+                eventStore,
+                viewWriter);
         }
 
         [Test]
@@ -115,7 +69,7 @@ namespace DistCqrs.Core.Test.Command
         {
             var rootId = Guid.NewGuid();
 
-            var cmd = new UpdateAccountBalanceCommand()
+            var cmd = new UpdateAccountBalanceCommand
                       {
                           RootId = rootId,
                           Change = 10
@@ -124,9 +78,9 @@ namespace DistCqrs.Core.Test.Command
             eventStore.GetRootType(rootId).Returns(typeof(Account));
 
             eventStore.GetEvents<Account>(rootId)
-                .Returns(new List<IEvent<Account>>()
+                .Returns(new List<IEvent<Account>>
                          {
-                             new AccountCreatedEvent() {RootId = rootId}
+                             new AccountCreatedEvent {RootId = rootId}
                          });
 
 
@@ -149,13 +103,59 @@ namespace DistCqrs.Core.Test.Command
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
         }
 
-        private ICommandProcessor CreateSut()
+        [Test]
+        public void GivenCommand_WhenProcess_ThenLoadRoot()
         {
-            return new CommandProcessor(serviceLocator,
-                rootTypeResolver,
-                unitOfWorkFactory,
-                eventStore,
-                viewWriter);
+            var rootId = Guid.NewGuid();
+            Account account = null;
+
+            var events = new List<IEvent<Account>>();
+            events.Add(new AccountCreatedEvent {RootId = rootId});
+            events.Add(
+                new AccountBalanceUpdatedEvent
+                {
+                    RootId = rootId,
+                    Change = 10
+                });
+
+            eventStore.GetRootType(rootId).Returns(typeof(Account));
+
+            eventStore.GetEvents<Account>(rootId).Returns(events);
+
+            viewWriter.When(r => r.UpdateView(Arg.Any<Account>()))
+                .Do(r => account = r.Arg<Account>());
+
+            var cmd = new UpdateAccountBalanceCommand
+                      {
+                          RootId = rootId,
+                          Change = 5
+                      };
+
+            var sut = CreateSut();
+            sut.Process(cmd);
+
+            serviceLocator.Received(1)
+                .ResolveEventHandler<Account, AccountCreatedEvent>();
+            serviceLocator.Received(2)
+                .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
+
+            Assert.IsNotNull(account);
+            Assert.AreEqual(rootId, account.Id);
+            Assert.AreEqual(15, account.Balance);
+        }
+
+        [Test]
+        public void
+            GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
+        {
+            serviceLocator
+                .ResolveCommandHandler<Account, CreateAccountCommand>()
+                .Returns((ICommandHandler<Account, CreateAccountCommand>) null);
+
+            var sut = CreateSut();
+
+            Assert.That(() => sut.Process(new CreateAccountCommand()),
+                Throws.TypeOf<ServiceLocationException>());
         }
     }
 }

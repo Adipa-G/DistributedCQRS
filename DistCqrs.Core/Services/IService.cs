@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace DistCqrs.Core.Services
+﻿namespace DistCqrs.Core.Services
 {
     public interface IService
     {

@@ -10,17 +10,6 @@ namespace DistCqrs.Sample.Service
 
         private static IConfigurationRoot configuration;
 
-        static void Init()
-        {
-            if (configuration == null)
-            {
-                configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json")
-                    .Build();
-            }
-        }
-
         public static string ConnectionString
         {
             get
@@ -37,6 +26,15 @@ namespace DistCqrs.Sample.Service
                 Init();
                 return configuration[LogFilePathKey];
             }
+        }
+
+        private static void Init()
+        {
+            if (configuration == null)
+                configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json")
+                    .Build();
         }
     }
 }

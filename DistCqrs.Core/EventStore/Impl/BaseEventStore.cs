@@ -8,18 +8,6 @@ namespace DistCqrs.Core.EventStore.Impl
 {
     public abstract class BaseEventStore : IEventStore
     {
-        protected abstract IEventRecord Create();
-
-        protected abstract string Serialize<TRoot>(IEvent<TRoot> evt)
-            where TRoot : IRoot;
-
-        protected abstract IEvent<TRoot> DeSerialize<TRoot>(string data)
-            where TRoot : IRoot;
-
-        protected abstract Task Save(IList<IEventRecord> records);
-
-        protected abstract Task<IList<IEventRecord>> Load(Guid rootId);
-
         public abstract Task<Type> GetRootType(Guid rootId);
 
         public async Task SaveEvents<TRoot>(IList<IEvent<TRoot>> events)
@@ -45,11 +33,21 @@ namespace DistCqrs.Core.EventStore.Impl
             var sortedRecords = eventRecords.OrderBy(r => r.EventTimestamp);
 
             foreach (var record in sortedRecords)
-            {
                 events.Add(DeSerialize<TRoot>(record.Data));
-            }
 
             return events;
         }
+
+        protected abstract IEventRecord Create();
+
+        protected abstract string Serialize<TRoot>(IEvent<TRoot> evt)
+            where TRoot : IRoot;
+
+        protected abstract IEvent<TRoot> DeSerialize<TRoot>(string data)
+            where TRoot : IRoot;
+
+        protected abstract Task Save(IList<IEventRecord> records);
+
+        protected abstract Task<IList<IEventRecord>> Load(Guid rootId);
     }
 }

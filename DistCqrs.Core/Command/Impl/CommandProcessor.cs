@@ -14,12 +14,12 @@ namespace DistCqrs.Core.Command.Impl
     [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class CommandProcessor : ICommandProcessor
     {
-        private readonly IServiceLocator serviceLocator;
-        private readonly IRootTypeResolver rootTypeResolver;
-        private readonly IUnitOfWorkFactory unitOfWorkFactory;
         private readonly IEventStore eventStore;
+        private readonly IRootTypeResolver rootTypeResolver;
+        private readonly IServiceLocator serviceLocator;
+        private readonly IUnitOfWorkFactory unitOfWorkFactory;
         private readonly IViewWriter viewWriter;
-        
+
         public CommandProcessor(IServiceLocator serviceLocator,
             IRootTypeResolver rootTypeResolver,
             IUnitOfWorkFactory unitOfWorkFactory,
@@ -45,14 +45,12 @@ namespace DistCqrs.Core.Command.Impl
                 var commandHandler = InvokeGeneric<object>(this,
                     "ResolveCommandHandler", new[] {rootType, cmd.GetType()});
                 if (commandHandler == null)
-                {
                     throw new ServiceLocationException(
                         $"Cannot resolve service to process command of type {cmd.GetType().FullName}");
-                }
 
                 root = await GetRoot(rootType, cmd.RootId);
 
-                IList events = (IList) await Invoke<dynamic>(commandHandler,
+                var events = (IList) await Invoke<dynamic>(commandHandler,
                     "Handle",
                     new object[] {root, cmd});
 
@@ -120,27 +118,29 @@ namespace DistCqrs.Core.Command.Impl
 
         //wrappers to make refactor safe
         //ReSharper disable UnusedMember.Local
-        ICommandHandler<TRoot, TCmd> ResolveCommandHandler<TRoot, TCmd>()
+        private ICommandHandler<TRoot, TCmd>
+            ResolveCommandHandler<TRoot, TCmd>()
             where TRoot : IRoot, new()
             where TCmd : ICommand
         {
             return serviceLocator.ResolveCommandHandler<TRoot, TCmd>();
         }
 
-        IEventHandler<TRoot, TEvent> ResolveEventHandler<TRoot, TEvent>()
+        private IEventHandler<TRoot, TEvent>
+            ResolveEventHandler<TRoot, TEvent>()
             where TRoot : IRoot, new()
             where TEvent : IEvent<TRoot>
         {
             return serviceLocator.ResolveEventHandler<TRoot, TEvent>();
         }
 
-        Task<IList<IEvent<TRoot>>> GetEvents<TRoot>(Guid rootId)
+        private Task<IList<IEvent<TRoot>>> GetEvents<TRoot>(Guid rootId)
             where TRoot : IRoot
         {
             return eventStore.GetEvents<TRoot>(rootId);
         }
 
-        Task SaveEvents<TRoot>(IList<IEvent<TRoot>> events)
+        private Task SaveEvents<TRoot>(IList<IEvent<TRoot>> events)
             where TRoot : IRoot
         {
             return eventStore.SaveEvents(events);

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DistCqrs.Sample.Service.Product
+﻿namespace DistCqrs.Sample.Service.Product
 {
     public class Constants
     {

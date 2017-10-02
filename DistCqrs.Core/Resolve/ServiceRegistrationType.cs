@@ -2,7 +2,7 @@
 {
     public enum ServiceRegistrationType
     {
-        Singleton  = 1,
+        Singleton = 1,
         Scope = 2
     }
 }

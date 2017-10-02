@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using DistCqrs.Core.Command;
 using DistCqrs.Core.Resolve;
@@ -13,14 +12,14 @@ namespace DistCqrs.Sample.Service.Product
     {
         public ProductService(ILog log,
             IServiceLocator serviceLocator) : base(log,
-                serviceLocator)
+            serviceLocator)
         {
-            this.Id = Constants.ServiceId;
+            Id = Constants.ServiceId;
         }
 
         protected override IList<string> GetSubscriptionBusIds()
         {
-            return new List<string>() { Constants.BusId };
+            return new List<string> {Constants.BusId};
         }
 
         protected override Task OnCommandProcessed(ICommand cmd)

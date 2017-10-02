@@ -1,5 +1,4 @@
 ﻿using System;
-using DistCqrs.Core.Domain;
 
 namespace DistCqrs.Core.Command
 {

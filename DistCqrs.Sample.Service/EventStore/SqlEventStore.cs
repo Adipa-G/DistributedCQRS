@@ -43,7 +43,7 @@ namespace DistCqrs.Sample.Service.EventStore
         protected override string Serialize<TRoot>(IEvent<TRoot> evt)
         {
             var settings =
-                new JsonSerializerSettings()
+                new JsonSerializerSettings
                 {
                     TypeNameHandling =
                         TypeNameHandling.All
@@ -54,7 +54,7 @@ namespace DistCqrs.Sample.Service.EventStore
         protected override IEvent<TRoot> DeSerialize<TRoot>(string data)
         {
             var settings =
-                new JsonSerializerSettings()
+                new JsonSerializerSettings
                 {
                     TypeNameHandling =
                         TypeNameHandling.All
@@ -125,7 +125,7 @@ namespace DistCqrs.Sample.Service.EventStore
 
         public override async Task<Type> GetRootType(Guid rootId)
         {
-            string data = string.Empty;
+            var data = string.Empty;
             using (var con = new SqlConnection(Config.ConnectionString))
             {
                 await con.OpenAsync();
@@ -138,13 +138,11 @@ namespace DistCqrs.Sample.Service.EventStore
 
                 var resultSet = await cmd.ExecuteReaderAsync();
                 if (await resultSet.ReadAsync())
-                {
                     data = await resultSet.GetFieldValueAsync<string>(0);
-                }
             }
 
             var settings =
-                new JsonSerializerSettings()
+                new JsonSerializerSettings
                 {
                     TypeNameHandling =
                         TypeNameHandling.All

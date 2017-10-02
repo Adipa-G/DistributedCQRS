@@ -4,7 +4,9 @@ namespace DistCqrs.Core.Resolve.Helpers
 {
     public class Dependency
     {
-        public Dependency(Type @interface, 
+        public ServiceRegistrationType RegistrationType;
+
+        public Dependency(Type @interface,
             Type implementation,
             ServiceRegistrationType registrationType)
         {
@@ -16,7 +18,5 @@ namespace DistCqrs.Core.Resolve.Helpers
         public Type Interface { get; }
 
         public Type Implementation { get; }
-
-        public ServiceRegistrationType RegistrationType;
     }
 }

@@ -35,13 +35,9 @@ namespace DistCqrs.Core.Resolve.Helpers
                              typeof(ICommandHandler<,>));
 
                 foreach (var cmdType in allCmds)
-                {
                     if (handlerInterfaceType.GenericTypeArguments[1] == cmdType)
-                    {
                         mappings.Add(new CommandToEntityMapping(cmdType,
                             handlerInterfaceType.GenericTypeArguments[0]));
-                    }
-                }
             }
 
             return mappings;
@@ -112,36 +108,31 @@ namespace DistCqrs.Core.Resolve.Helpers
             var classes = assemblies.SelectMany(
                 a => a.GetTypes()
                     .Where(t => t.GetTypeInfo()
-                                    .GetCustomAttribute<ServiceRegistrationAttribute
+                                    .GetCustomAttribute<
+                                        ServiceRegistrationAttribute
                                     >() != null));
 
             foreach (var @class in classes)
             {
                 if (@class.IsAbstract)
-                {
                     continue;
-                }
 
                 var interfaces = new List<Type>();
                 var attribute = @class.GetTypeInfo()
                     .GetCustomAttribute<ServiceRegistrationAttribute>();
 
                 var curClass = @class;
-                while (curClass != typeof(Object))
+                while (curClass != typeof(object))
                 {
                     interfaces.AddRange(curClass.GetInterfaces());
                     curClass = curClass.BaseType;
                 }
                 interfaces = interfaces.Distinct().ToList();
-                
+
                 foreach (var @interface in interfaces)
-                {
                     if (dependencies.All(d => d.Interface != @interface))
-                    {
                         dependencies.Add(new Dependency(@interface, @class,
                             attribute.RegistrationType));
-                    }
-                }
             }
 
             return dependencies;

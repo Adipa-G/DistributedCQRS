@@ -1,5 +1,4 @@
-﻿using System;
-using DistCqrs.Core.Command;
+﻿using DistCqrs.Core.Command;
 using DistCqrs.Core.Command.Impl;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.Exceptions;
@@ -11,7 +10,6 @@ using DistCqrs.Sample.Service;
 using DistCqrs.Sample.Service.Log;
 using DistCqrs.Sample.Service.Product;
 using DistCqrs.Sample.Service.Product.View;
-using DistCqrs.Sample.Service.Resolve;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +21,7 @@ namespace DistCqrs.Sample.WebApi.Product
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigureIOC(services);
-            
+
             services.AddMvc();
         }
 
@@ -34,14 +32,19 @@ namespace DistCqrs.Sample.WebApi.Product
             var log = app.ApplicationServices.GetService<ILogStart>();
             log.Init();
 
-            var productView = app.ApplicationServices.GetService<IProductView>() as ProductDbContext;
+            var productView =
+                app.ApplicationServices.GetService<IProductView>() as
+                    ProductDbContext;
             productView.Database.Migrate();
 
-            var locator = app.ApplicationServices.GetService<IServiceLocator>() as ServiceLocator;
+            var locator =
+                app.ApplicationServices.GetService<IServiceLocator>() as
+                    ServiceLocator;
             locator.Init(app.ApplicationServices);
             locator.Register(new InternalBus(Constants.BusId));
-            
-            var productService = app.ApplicationServices.GetService<IProductService>();
+
+            var productService =
+                app.ApplicationServices.GetService<IProductService>();
             locator.Register(productService);
             productService.Init();
         }
@@ -59,7 +62,6 @@ namespace DistCqrs.Sample.WebApi.Product
 
             var allRegs = ResolveUtils.GetDependencies(assemblies);
             foreach (var reg in allRegs)
-            {
                 switch (reg.RegistrationType)
                 {
                     case ServiceRegistrationType.Scope:
@@ -73,7 +75,6 @@ namespace DistCqrs.Sample.WebApi.Product
                         throw new ServiceRegistrationException(
                             $"Unknown registration type {reg.RegistrationType}");
                 }
-            }
 
             var commandHandlerMappings =
                 ResolveUtils.GetCommandHandlerMappings(assemblies);
@@ -82,7 +83,8 @@ namespace DistCqrs.Sample.WebApi.Product
                 var cmdHanderInterface =
                     typeof(ICommandHandler<,>).MakeGenericType(
                         mapping.EntityType, mapping.CommandType);
-                services.AddScoped(cmdHanderInterface, mapping.CommandHandlerType);
+                services.AddScoped(cmdHanderInterface,
+                    mapping.CommandHandlerType);
             }
 
             var eventHandlerMappings =
@@ -92,7 +94,8 @@ namespace DistCqrs.Sample.WebApi.Product
                 var eventHandlerInterface =
                     typeof(IEventHandler<,>).MakeGenericType(
                         mapping.EntityType, mapping.EventType);
-                services.AddScoped(eventHandlerInterface, mapping.EventHandlerType);
+                services.AddScoped(eventHandlerInterface,
+                    mapping.EventHandlerType);
             }
         }
     }

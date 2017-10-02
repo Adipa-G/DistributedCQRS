@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DistCqrs.Sample.Performance.PerformanceTest
+﻿namespace DistCqrs.Sample.Performance.PerformanceTest
 {
     public class Program
     {

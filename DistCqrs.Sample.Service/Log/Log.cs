@@ -27,7 +27,7 @@ namespace DistCqrs.Sample.Service.Log
 
         public void LogException(string message, Exception ex)
         {
-            Serilog.Log.Error(ex,message);
+            Serilog.Log.Error(ex, message);
         }
     }
 }

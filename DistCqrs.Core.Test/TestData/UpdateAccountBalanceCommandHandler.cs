@@ -14,7 +14,7 @@ namespace DistCqrs.Core.Test.TestData
         {
             IList<IEvent<Account>> list = new List<IEvent<Account>>();
             list.Add(
-                new AccountBalanceUpdatedEvent()
+                new AccountBalanceUpdatedEvent
                 {
                     RootId = cmd.RootId,
                     Change = cmd.Change

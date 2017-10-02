@@ -5,8 +5,7 @@ namespace DistCqrs.Core.Test.TestData
 {
     public class AccountBalanceUpdatedEvent : IEvent<Account>
     {
-        public Guid RootId { get; set; }
-
         public double Change { get; set; }
+        public Guid RootId { get; set; }
     }
 }

@@ -5,8 +5,7 @@ namespace DistCqrs.Sample.Domain
 {
     public abstract class BaseRoot : IRoot
     {
-        public Guid Id { get; set; }
-
         public bool IsDeleted { get; set; }
+        public Guid Id { get; set; }
     }
 }

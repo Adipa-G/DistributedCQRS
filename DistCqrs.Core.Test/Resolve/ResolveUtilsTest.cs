@@ -13,21 +13,15 @@ namespace DistCqrs.Core.Test.Resolve
     {
         [Test]
         public void
-            GivenEntityCommandAndHandler_WhenGetCommandToEntityMappings_ThenReturn()
+            GivenClassWithDependecyAttribute_WhenGetDependencies_ThenReturn()
         {
-            var mappings = ResolveUtils.GetCommandToEntityMappings(
+            var dependencies = ResolveUtils.GetDependencies(
                 new[] {typeof(ResolveUtilsTest).GetTypeInfo().Assembly});
 
-            Assert.AreEqual(typeof(Account),
-                mappings
-                    .Single(m => m.CommandType == typeof(CreateAccountCommand))
-                    .EntityType);
-
-            Assert.AreEqual(typeof(Account),
-                mappings
-                    .Single(m => m.CommandType ==
-                                 typeof(UpdateAccountBalanceCommand))
-                    .EntityType);
+            Assert.IsTrue(dependencies.Any(
+                d => d.Interface == typeof(IEventStore) &&
+                     d.Implementation == typeof(InMemoryEventStore) &&
+                     d.RegistrationType == ServiceRegistrationType.Scope));
         }
 
         [Test]
@@ -52,6 +46,25 @@ namespace DistCqrs.Core.Test.Resolve
 
         [Test]
         public void
+            GivenEntityCommandAndHandler_WhenGetCommandToEntityMappings_ThenReturn()
+        {
+            var mappings = ResolveUtils.GetCommandToEntityMappings(
+                new[] {typeof(ResolveUtilsTest).GetTypeInfo().Assembly});
+
+            Assert.AreEqual(typeof(Account),
+                mappings
+                    .Single(m => m.CommandType == typeof(CreateAccountCommand))
+                    .EntityType);
+
+            Assert.AreEqual(typeof(Account),
+                mappings
+                    .Single(m => m.CommandType ==
+                                 typeof(UpdateAccountBalanceCommand))
+                    .EntityType);
+        }
+
+        [Test]
+        public void
             GivenEntityCommandAndHandler_WhenGetEventHandlerMappings_ThenReturn()
         {
             var mappings = ResolveUtils.GetEventHandlerMappings(
@@ -65,19 +78,8 @@ namespace DistCqrs.Core.Test.Resolve
             Assert.IsTrue(mappings.Any(
                 m => m.EntityType == typeof(Account) &&
                      m.EventType == typeof(AccountBalanceUpdatedEvent) &&
-                     m.EventHandlerType == typeof(AccountBalanceUpdatedEventHandler)));
-        }
-
-        [Test]
-        public void GivenClassWithDependecyAttribute_WhenGetDependencies_ThenReturn()
-        {
-            var dependencies = ResolveUtils.GetDependencies(
-                new[] {typeof(ResolveUtilsTest).GetTypeInfo().Assembly});
-
-            Assert.IsTrue(dependencies.Any(
-                d => d.Interface == typeof(IEventStore) &&
-                     d.Implementation == typeof(InMemoryEventStore) &&
-                     d.RegistrationType == ServiceRegistrationType.Scope));
+                     m.EventHandlerType ==
+                     typeof(AccountBalanceUpdatedEventHandler)));
         }
     }
 }

@@ -12,8 +12,6 @@ namespace DistCqrs.Core.Services.Impl
             this.serviceLocator = serviceLocator;
         }
 
-        protected abstract void RegisterAllBuses();
-
         public void Init(string[] serviceIds)
         {
             RegisterAllBuses();
@@ -22,13 +20,13 @@ namespace DistCqrs.Core.Services.Impl
             {
                 var service = serviceLocator.ResolveService(serviceId);
                 if (service == null)
-                {
                     throw new ServiceLocationException(
                         $"Unable to resolve service {serviceId}");
-                }
 
                 service.Init();
             }
         }
+
+        protected abstract void RegisterAllBuses();
     }
 }

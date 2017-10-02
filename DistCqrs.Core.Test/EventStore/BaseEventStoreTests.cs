@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
-using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Test.TestData;
 using NUnit.Framework;
 
@@ -12,14 +11,19 @@ namespace DistCqrs.Core.Test.EventStore
     [TestFixture]
     public class BaseEventStoreTests
     {
+        private InMemoryEventStore CreateSut()
+        {
+            return new InMemoryEventStore();
+        }
+
         [Test]
         public async Task GivenEvents_WhenSaveEvents_ThenSave()
         {
             var accountId = Guid.NewGuid();
-            var events = new List<IEvent<Account>>()
+            var events = new List<IEvent<Account>>
                          {
-                             new AccountCreatedEvent() {RootId = accountId},
-                             new AccountBalanceUpdatedEvent()
+                             new AccountCreatedEvent {RootId = accountId},
+                             new AccountBalanceUpdatedEvent
                              {
                                  Change = 100,
                                  RootId = accountId
@@ -38,10 +42,10 @@ namespace DistCqrs.Core.Test.EventStore
         public async Task GivenSavedEvents_WhenLoadEvents_ThenLoad()
         {
             var accountId = Guid.NewGuid();
-            var events = new List<IEvent<Account>>()
+            var events = new List<IEvent<Account>>
                          {
-                             new AccountCreatedEvent() {RootId = accountId},
-                             new AccountBalanceUpdatedEvent()
+                             new AccountCreatedEvent {RootId = accountId},
+                             new AccountBalanceUpdatedEvent
                              {
                                  Change = 100,
                                  RootId = accountId
@@ -63,11 +67,6 @@ namespace DistCqrs.Core.Test.EventStore
             Assert.IsNotNull(updated);
             Assert.AreEqual(accountId, updated.RootId);
             Assert.AreEqual(100, updated.Change);
-        }
-
-        private InMemoryEventStore CreateSut()
-        {
-            return new InMemoryEventStore();
         }
     }
 }
