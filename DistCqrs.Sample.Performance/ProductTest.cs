@@ -10,7 +10,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
 {
     public class ProductTest
     {
-        private const int threads = 20;
+        private const int threads = 50;
         private readonly string urlBase;
 
         public ProductTest(string urlBase)

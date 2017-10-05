@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
@@ -14,6 +16,10 @@ namespace DistCqrs.Core.Command.Impl
     [ServiceRegistration(ServiceRegistrationType.Scope)]
     public class CommandProcessor : ICommandProcessor
     {
+        private static readonly
+            ConcurrentDictionary<string, MethodInfo> MethodCache =
+                new ConcurrentDictionary<string, MethodInfo>();
+
         private readonly IEventStore eventStore;
         private readonly IRootTypeResolver rootTypeResolver;
         private readonly IServiceLocator serviceLocator;
@@ -100,10 +106,24 @@ namespace DistCqrs.Core.Command.Impl
             Type[] types,
             object[] values = null)
         {
-            var method = src.GetType().GetTypeInfo().GetMethod(methodName,
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            var genericMethod = method.MakeGenericMethod(types);
+            var cacheKey = $"{src.GetType().GetTypeInfo().FullName}_" +
+                           $"{methodName}_" +
+                           $"{string.Join(",", types.Select(t => t.FullName))}";
 
+            MethodInfo genericMethod;
+            if (MethodCache.ContainsKey(cacheKey))
+            {
+                genericMethod = MethodCache[cacheKey];
+            }
+            else
+            {
+                var method = src.GetType().GetTypeInfo().GetMethod(methodName,
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                genericMethod = method.MakeGenericMethod(types);
+
+                MethodCache.TryAdd(cacheKey, genericMethod);
+            }
+            
             return (T) genericMethod.Invoke(src, values);
         }
 
@@ -111,7 +131,19 @@ namespace DistCqrs.Core.Command.Impl
             string methodName,
             object[] values = null)
         {
-            var method = src.GetType().GetTypeInfo().GetMethod(methodName);
+            var cacheKey = $"{src.GetType().GetTypeInfo().FullName}_" +
+                           $"{methodName}";
+
+            MethodInfo method;
+            if (MethodCache.ContainsKey(cacheKey))
+            {
+                method = MethodCache[cacheKey];
+            }
+            else
+            {
+                method = src.GetType().GetTypeInfo().GetMethod(methodName);
+                MethodCache.TryAdd(cacheKey, method);
+            }
 
             return (T) method.Invoke(src, values);
         }
