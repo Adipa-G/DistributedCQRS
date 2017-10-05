@@ -9,6 +9,7 @@ using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Exceptions;
 using DistCqrs.Core.Resolve;
+using DistCqrs.Core.Services;
 using DistCqrs.Core.View;
 
 namespace DistCqrs.Core.Command.Impl
@@ -25,35 +26,43 @@ namespace DistCqrs.Core.Command.Impl
         private readonly IServiceLocator serviceLocator;
         private readonly IUnitOfWorkFactory unitOfWorkFactory;
         private readonly IViewWriter viewWriter;
+        private readonly ILog log;
 
         public CommandProcessor(IServiceLocator serviceLocator,
             IRootTypeResolver rootTypeResolver,
             IUnitOfWorkFactory unitOfWorkFactory,
             IEventStore eventStore,
-            IViewWriter viewWriter)
+            IViewWriter viewWriter,
+            ILog log)
         {
             this.serviceLocator = serviceLocator;
             this.rootTypeResolver = rootTypeResolver;
             this.unitOfWorkFactory = unitOfWorkFactory;
             this.eventStore = eventStore;
             this.viewWriter = viewWriter;
+            this.log = log;
         }
 
         public async Task Process(ICommand cmd)
         {
             IRoot root;
-
+            
+            log.LogDebug($"Start processing command {cmd.GetType().FullName} {cmd.RootId}");
             using (var unitOfWork = unitOfWorkFactory.Create())
             {
                 var rootType = await eventStore.GetRootType(cmd.RootId) ??
                                rootTypeResolver.GetRootType(cmd);
-
+                
                 var commandHandler = InvokeGeneric<object>(this,
                     "ResolveCommandHandler", new[] {rootType, cmd.GetType()});
-                if (commandHandler == null)
-                    throw new ServiceLocationException(
-                        $"Cannot resolve service to process command of type {cmd.GetType().FullName}");
 
+                if (commandHandler == null)
+                {
+                    var errorMsg =
+                        $"Cannot resolve service to process command of type {cmd.GetType().FullName}";
+                    throw new ServiceLocationException(errorMsg);
+                }
+                
                 root = await GetRoot(rootType, cmd.RootId);
 
                 var events = (IList) await Invoke<dynamic>(commandHandler,
@@ -67,8 +76,11 @@ namespace DistCqrs.Core.Command.Impl
 
                 await unitOfWork.Complete();
             }
+            log.LogDebug($"Completed processing command {cmd.GetType().FullName} {cmd.RootId}");
 
+            log.LogDebug($"Start updating view {cmd.RootId}");
             await viewWriter.UpdateView(root);
+            log.LogDebug($"Completed updating view {cmd.RootId}");
         }
 
         private async Task<IRoot> GetRoot(Type rootType, Guid rootId)

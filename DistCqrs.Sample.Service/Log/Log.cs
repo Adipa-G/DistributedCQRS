@@ -11,8 +11,19 @@ namespace DistCqrs.Sample.Service.Log
         {
             Serilog.Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
+                .MinimumLevel.Is(Config.LogLevel)
                 .WriteTo.File(Config.LogFilePath)
                 .CreateLogger();
+        }
+
+        public void LogVerbose(string message)
+        {
+            Serilog.Log.Verbose(message);
+        }
+
+        public void LogDebug(string message)
+        {
+            Serilog.Log.Debug(message);
         }
 
         public void LogInformation(string message)

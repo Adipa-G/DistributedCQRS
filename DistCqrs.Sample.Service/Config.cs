@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.Extensions.Configuration;
+using Serilog.Events;
 
 namespace DistCqrs.Sample.Service
 {
@@ -7,6 +9,7 @@ namespace DistCqrs.Sample.Service
     {
         private const string ConnectionStringKey = "ConnectionString";
         private const string LogFilePathKey = "LogFilePath";
+        private const string LogLevelKey = "LogLevel";
 
         private static IConfigurationRoot configuration;
 
@@ -25,6 +28,16 @@ namespace DistCqrs.Sample.Service
             {
                 Init();
                 return configuration[LogFilePathKey];
+            }
+        }
+
+        public static LogEventLevel LogLevel
+        {
+            get
+            {
+                Init();
+                return (LogEventLevel) Enum.Parse(typeof(LogEventLevel),
+                    configuration[LogLevelKey]);
             }
         }
 
