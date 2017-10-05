@@ -6,6 +6,7 @@ using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
 using DistCqrs.Core.Exceptions;
 using DistCqrs.Core.Resolve;
+using DistCqrs.Core.Services;
 using DistCqrs.Core.Test.TestData;
 using DistCqrs.Core.View;
 using NSubstitute;
@@ -16,6 +17,15 @@ namespace DistCqrs.Core.Test.Command
     [TestFixture]
     public class CommandProcessorTests
     {
+        private IServiceLocator serviceLocator;
+        private IRootTypeResolver rootTypeResolver;
+        private IUnitOfWorkFactory unitOfWorkFactory;
+        private IEventStore eventStore;
+        private IViewWriter viewWriter;
+        private ILog log;
+
+        private IUnitOfWork unitOfWork;
+
         [SetUp]
         public void Init()
         {
@@ -24,6 +34,7 @@ namespace DistCqrs.Core.Test.Command
             unitOfWorkFactory = Substitute.For<IUnitOfWorkFactory>();
             eventStore = Substitute.For<IEventStore>();
             viewWriter = Substitute.For<IViewWriter>();
+            log = Substitute.For<ILog>();
 
             unitOfWork = Substitute.For<IUnitOfWork>();
             unitOfWorkFactory.Create().Returns(unitOfWork);
@@ -46,24 +57,7 @@ namespace DistCqrs.Core.Test.Command
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>()
                 .Returns(new AccountBalanceUpdatedEventHandler());
         }
-
-        private IServiceLocator serviceLocator;
-        private IRootTypeResolver rootTypeResolver;
-        private IUnitOfWorkFactory unitOfWorkFactory;
-        private IEventStore eventStore;
-        private IViewWriter viewWriter;
-
-        private IUnitOfWork unitOfWork;
-
-        private ICommandProcessor CreateSut()
-        {
-            return new CommandProcessor(serviceLocator,
-                rootTypeResolver,
-                unitOfWorkFactory,
-                eventStore,
-                viewWriter);
-        }
-
+        
         [Test]
         public void GivenCommand_WhenProcess_ThenGenerateEvents()
         {
@@ -101,6 +95,7 @@ namespace DistCqrs.Core.Test.Command
             eventStore.Received(1)
                 .SaveEvents(Arg.Any<IList<IEvent<Account>>>());
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
+            log.Received(4).LogDebug(Arg.Any<string>());
         }
 
         [Test]
@@ -145,8 +140,7 @@ namespace DistCqrs.Core.Test.Command
         }
 
         [Test]
-        public void
-            GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
+        public void GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
         {
             serviceLocator
                 .ResolveCommandHandler<Account, CreateAccountCommand>()
@@ -156,6 +150,16 @@ namespace DistCqrs.Core.Test.Command
 
             Assert.That(() => sut.Process(new CreateAccountCommand()),
                 Throws.TypeOf<ServiceLocationException>());
+        }
+
+        private ICommandProcessor CreateSut()
+        {
+            return new CommandProcessor(serviceLocator,
+                rootTypeResolver,
+                unitOfWorkFactory,
+                eventStore,
+                viewWriter,
+                log);
         }
     }
 }
