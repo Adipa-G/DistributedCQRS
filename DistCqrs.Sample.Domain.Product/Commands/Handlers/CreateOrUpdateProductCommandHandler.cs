@@ -15,11 +15,20 @@ namespace DistCqrs.Sample.Domain.Product.Commands.Handlers
         {
             IList<IEvent<Product>> list = new List<IEvent<Product>>();
             if (root.Id == Guid.Empty)
+            {
                 list.Add(new ProductCreatedEvent(cmd.RootId, cmd.Code, cmd.Name,
                     cmd.UnitPrice));
+            }
             else
+            {
+                if (root.IsDeleted)
+                {
+                    throw new DomainException($"Product {cmd.RootId} is deleted.");
+                }
+                
                 list.Add(new ProductUpdatedEvent(cmd.RootId, cmd.Code, cmd.Name,
                     cmd.UnitPrice));
+            }
             return Task.FromResult(list);
         }
     }

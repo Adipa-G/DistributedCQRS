@@ -95,7 +95,7 @@ namespace DistCqrs.Core.Test.Command
             eventStore.Received(1)
                 .SaveEvents(Arg.Any<IList<IEvent<Account>>>());
             viewWriter.Received(1).UpdateView(Arg.Any<Account>());
-            log.Received(4).LogDebug(Arg.Any<string>());
+            log.Received(1).LogDebug(Arg.Any<string>());
         }
 
         [Test]

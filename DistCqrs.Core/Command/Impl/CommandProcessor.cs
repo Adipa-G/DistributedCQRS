@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.EventStore;
@@ -45,42 +46,78 @@ namespace DistCqrs.Core.Command.Impl
 
         public async Task Process(ICommand cmd)
         {
-            IRoot root;
-            
-            log.LogDebug($"Start processing command {cmd.GetType().FullName} {cmd.RootId}");
-            using (var unitOfWork = unitOfWorkFactory.Create())
+            var error = false;
+            var logBuilder = new StringBuilder();
+
+            try
             {
-                var rootType = await eventStore.GetRootType(cmd.RootId) ??
-                               rootTypeResolver.GetRootType(cmd);
-                
-                var commandHandler = InvokeGeneric<object>(this,
-                    "ResolveCommandHandler", new[] {rootType, cmd.GetType()});
+                IRoot root;
 
-                if (commandHandler == null)
+                logBuilder.AppendLine($"Start command {cmd.GetType().FullName} {cmd.RootId}");
+                logBuilder.AppendLine($"\tStart processing command");
+
+                using (var unitOfWork = unitOfWorkFactory.Create())
                 {
-                    var errorMsg =
-                        $"Cannot resolve service to process command of type {cmd.GetType().FullName}";
-                    throw new ServiceLocationException(errorMsg);
+                    var rootType = await eventStore.GetRootType(cmd.RootId) ??
+                                   rootTypeResolver.GetRootType(cmd);
+                    logBuilder.AppendLine($"\t\tFound Root Type {rootType.FullName}");
+
+                    var commandHandler = InvokeGeneric<object>(this,
+                        "ResolveCommandHandler", new[] { rootType, cmd.GetType() });
+                    if (commandHandler == null)
+                    {
+                        var errorMsg =
+                            $"Cannot resolve service to process command of type {cmd.GetType().FullName}";
+
+                        logBuilder.AppendLine($"\t\t{errorMsg}");
+                        throw new ServiceLocationException(errorMsg);
+                    }
+                    logBuilder.AppendLine(
+                        $"\t\tFound command handler {commandHandler.GetType().FullName}");
+
+                    root = await GetRoot(rootType, cmd.RootId);
+                    logBuilder.AppendLine($"\t\tLoaded root {root.GetType().FullName}");
+
+                    var events = (IList)await Invoke<dynamic>(commandHandler,
+                        "Handle",
+                        new object[] { root, cmd });
+                    logBuilder.AppendLine($"\t\tGenerated {events.Count} events");
+
+                    await InvokeGeneric<Task>(this, "SaveEvents",
+                        new[] { rootType }, new object[] { events });
+                    logBuilder.AppendLine("\t\tSaved events");
+
+                    await ApplyEvents(root, events);
+                    logBuilder.AppendLine("\t\tApplied events");
+
+                    await unitOfWork.Complete();
+                    logBuilder.AppendLine("\t\tUnit of work completed");
                 }
-                
-                root = await GetRoot(rootType, cmd.RootId);
+                logBuilder.AppendLine("\tCompleted processing command");
 
-                var events = (IList) await Invoke<dynamic>(commandHandler,
-                    "Handle",
-                    new object[] {root, cmd});
-
-                await InvokeGeneric<Task>(this, "SaveEvents",
-                    new[] {rootType}, new object[] {events});
-
-                await ApplyEvents(root, events);
-
-                await unitOfWork.Complete();
+                logBuilder.AppendLine($"\tStart updating view {cmd.RootId}");
+                await viewWriter.UpdateView(root);
+                logBuilder.AppendLine($"\tCompleted updating view {cmd.RootId}");
             }
-            log.LogDebug($"Completed processing command {cmd.GetType().FullName} {cmd.RootId}");
-
-            log.LogDebug($"Start updating view {cmd.RootId}");
-            await viewWriter.UpdateView(root);
-            log.LogDebug($"Completed updating view {cmd.RootId}");
+            catch (Exception ex)
+            {
+                error = true;
+                logBuilder.AppendLine(
+                    $"\tException while processing command {ex}");
+                throw;
+            }
+            finally 
+            {
+                logBuilder.AppendLine($"End command {cmd.GetType().FullName} {cmd.RootId}");
+                if (error)
+                {
+                    log.LogError(logBuilder.ToString());
+                }
+                else
+                {
+                    log.LogDebug(logBuilder.ToString());
+                }
+            }
         }
 
         private async Task<IRoot> GetRoot(Type rootType, Guid rootId)
