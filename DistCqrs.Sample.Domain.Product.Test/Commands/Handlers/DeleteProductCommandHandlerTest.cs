@@ -13,7 +13,7 @@ namespace DistCqrs.Sample.Domain.Product.Test.Commands.Handlers
         [Test]
         public void GivenDeletedProduct_WhenHandleCommand_ThenReturnEmpty()
         {
-            var root = new Product() { Id = Guid.NewGuid(), IsDeleted = true };
+            var root = new Product { Id = Guid.NewGuid(), IsDeleted = true };
             var cmd =
                 new DeleteProductCommand(root.Id);
 
@@ -28,7 +28,7 @@ namespace DistCqrs.Sample.Domain.Product.Test.Commands.Handlers
         [Test]
         public void GivenNonExistantProduct_WhenHandleCommand_ThenThrowException()
         {
-            var root = new Product() { Id = Guid.Empty };
+            var root = new Product { Id = Guid.Empty };
             var cmd =
                 new DeleteProductCommand(Guid.NewGuid());
 
@@ -42,7 +42,7 @@ namespace DistCqrs.Sample.Domain.Product.Test.Commands.Handlers
         [Test]
         public void GivenExistingProduct_WhenHandleCommand_ThenReturnEvents()
         {
-            var root = new Product() { Id = Guid.NewGuid() };
+            var root = new Product { Id = Guid.NewGuid() };
             var cmd =
                 new DeleteProductCommand(root.Id);
 

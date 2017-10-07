@@ -8,8 +8,4 @@
     <ProjectReference Include="..\DistCqrs.Sample.Domain\DistCqrs.Sample.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Events\Handlers\" />
-  </ItemGroup>
-
 </Project>

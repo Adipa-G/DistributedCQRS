@@ -45,7 +45,7 @@ namespace DistCqrs.Sample.Domain.Order.Test.Commands.Handlers
         public void GivenDeletedOrder_WhenHandleCommand_ThenThrowException()
         {
             var root = new Order {Id = Guid.NewGuid(), IsDeleted = true};
-            var orderItem = new OrderItem(){Id = Guid.NewGuid()};
+            var orderItem = new OrderItem {Id = Guid.NewGuid()};
             root.Items.Add(orderItem);
 
             var cmd =
@@ -63,7 +63,7 @@ namespace DistCqrs.Sample.Domain.Order.Test.Commands.Handlers
         public void GivenExistingOrderItem_WhenHandleCommand_ThenReturnEvents()
         {
             var root = new Order { Id = Guid.NewGuid() };
-            var orderItem = new OrderItem() { Id = Guid.NewGuid() };
+            var orderItem = new OrderItem { Id = Guid.NewGuid() };
             root.Items.Add(orderItem);
 
             var cmd =
