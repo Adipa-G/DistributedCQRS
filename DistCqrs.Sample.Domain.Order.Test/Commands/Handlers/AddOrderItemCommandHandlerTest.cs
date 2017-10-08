@@ -30,11 +30,11 @@ namespace DistCqrs.Sample.Domain.Order.Test.Commands.Handlers
         public void GivenExistingOrderItem_WhenHandleCommand_ThenThrowException()
         {
             var root = new Order { Id = Guid.NewGuid() };
-            var productItem = new OrderItem {Id = Guid.NewGuid()};
-            root.Items.Add(productItem);
+            var orderItem = new OrderItem {Id = Guid.NewGuid()};
+            root.Items.Add(orderItem);
 
             var cmd =
-                new AddOrderItemCommand(root.Id, productItem.Id, 10,
+                new AddOrderItemCommand(root.Id, orderItem.Id, 10,
                     Guid.NewGuid(), "test", 1, "Kg", 100);
 
             var sut = CreateSut();

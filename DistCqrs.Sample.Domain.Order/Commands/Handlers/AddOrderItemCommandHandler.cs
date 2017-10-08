@@ -22,7 +22,7 @@ namespace DistCqrs.Sample.Domain.Order.Commands.Handlers
 
             if (root.Items.Any(i => i.Id == cmd.OrderItemId))
             {
-                throw new DomainException($"Product item {cmd.OrderItemId} already exists.");
+                throw new DomainException($"Order item {cmd.OrderItemId} already exists.");
             }
 
             if (root.IsDeleted)

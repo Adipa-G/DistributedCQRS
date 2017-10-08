@@ -6,12 +6,12 @@ using DistCqrs.Core.Resolve;
 using DistCqrs.Core.Services;
 using DistCqrs.Core.Services.Impl;
 
-namespace DistCqrs.Sample.Service.Product
+namespace DistCqrs.Sample.Service.Order
 {
     [ServiceRegistration(ServiceRegistrationType.Singleton)]
-    public class ProductService : BaseService, IProductService
+    public class OrderService : BaseService, IOrderService
     {
-        public ProductService(ILog log,
+        public OrderService(ILog log,
             IServiceLocator serviceLocator) : base(log,
             serviceLocator)
         {
