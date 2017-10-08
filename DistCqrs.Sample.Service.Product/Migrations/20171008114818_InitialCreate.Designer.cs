@@ -11,7 +11,7 @@ using System;
 namespace DistCqrs.Sample.Service.Product.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    [Migration("20170930131712_InitialCreate")]
+    [Migration("20171008114818_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

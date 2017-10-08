@@ -17,11 +17,7 @@ namespace DistCqrs.Sample.Service.Product.View
                 .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
             return Convert(product);
         }
-
-        public ProductDbContext() : base(new DbContextOptions<ProductDbContext>())
-        {
-        }
-
+        
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
             builder.UseSqlServer(Config.ConnectionString);

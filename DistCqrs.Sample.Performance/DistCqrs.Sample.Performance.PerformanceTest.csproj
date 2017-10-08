@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DistCqrs.Sample.Domain.Order\DistCqrs.Sample.Domain.Order.csproj" />
     <ProjectReference Include="..\DistCqrs.Sample.Domain.Product\DistCqrs.Sample.Domain.Product.csproj" />
   </ItemGroup>
   

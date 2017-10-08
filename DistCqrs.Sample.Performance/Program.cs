@@ -4,7 +4,8 @@
     {
         public static void Main(string[] args)
         {
-            new ProductTest("http://localhost:5000").Execute();
+            //new ProductTest("http://localhost:5000").Execute();
+            new OrderTest("http://localhost:5000").Execute();
         }
     }
 }

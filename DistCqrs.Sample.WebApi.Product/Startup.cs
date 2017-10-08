@@ -1,4 +1,5 @@
-﻿using DistCqrs.Core.Command;
+﻿using System;
+using DistCqrs.Core.Command;
 using DistCqrs.Core.Command.Impl;
 using DistCqrs.Core.Domain;
 using DistCqrs.Core.Exceptions;

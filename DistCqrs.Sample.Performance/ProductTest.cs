@@ -10,7 +10,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
 {
     public class ProductTest
     {
-        private const int threads = 50;
+        private const int threads = 12;
         private readonly string urlBase;
 
         public ProductTest(string urlBase)
@@ -20,8 +20,6 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
 
         public void Execute()
         {
-            var threadList = new List<Thread>();
-
             for (var i = 0; i < threads; i++)
             {
                 var thread = new Thread(RunInThread);
@@ -38,9 +36,15 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
             {
                 var sameRepeat = random.Next(1, 10);
                 var id = Guid.NewGuid();
+                var deleted = false;
 
                 for (var j = 0; j < sameRepeat; j++)
                 {
+                    if (deleted)
+                    {
+                        continue;
+                    }
+
                     var product = new ProductModel
                                   {
                                       Id = id,
@@ -50,18 +54,32 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
                                   };
 
                     if (j == 0)
-                        client.PostAsync($"{urlBase}/api/product",
+                    {
+                        var task = client.PostAsync($"{urlBase}/api/product",
                             new StringContent(
                                 JsonConvert.SerializeObject(product),
-                                Encoding.UTF8, "application/json")).Wait();
+                                Encoding.UTF8, "application/json"));
+                        task.Wait();
+
+                        var resultTask = task.Result.Content.ReadAsStringAsync();
+                        resultTask.Wait();
+
+                        var result = JsonConvert.DeserializeObject<ProductModel>(resultTask.Result);
+                        id = result.Id;
+                    }
                     else if (j < 5)
+                    {
                         client.PutAsync($"{urlBase}/api/product/{id}",
                             new StringContent(
                                 JsonConvert.SerializeObject(product),
                                 Encoding.UTF8, "application/json")).Wait();
+                    }
                     else
+                    {
                         client.DeleteAsync($"{urlBase}/api/product/{id}")
                             .Wait();
+                        deleted = true;
+                    }
                 }
             }
         }
