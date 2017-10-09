@@ -16,7 +16,8 @@ namespace DistCqrs.Sample.Domain.Order.Events.Handlers
                                 Qty = evt.Qty,
                                 QtyUnit = evt.QtyUnit,
                                 ProductId = evt.ProductId,
-                                ProductText = evt.ProductText
+                                ProductText = evt.ProductText,
+                                Order = root
                             };
 
             root.Items.Add(orderItem);

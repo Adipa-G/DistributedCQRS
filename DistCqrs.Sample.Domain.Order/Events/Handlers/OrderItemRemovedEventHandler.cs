@@ -11,6 +11,7 @@ namespace DistCqrs.Sample.Domain.Order.Events.Handlers
             var orderItem = root.Items.Single(i => i.Id == evt.OrderItemId);
 
             root.Items.Remove(orderItem);
+            orderItem.Order = null;
 
             var itemsToUpdateOrdinal =
                 root.Items.Where(i => i.Ordinal > orderItem.Ordinal);

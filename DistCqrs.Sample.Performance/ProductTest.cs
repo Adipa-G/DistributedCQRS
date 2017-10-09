@@ -67,7 +67,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
                         var result = JsonConvert.DeserializeObject<ProductModel>(resultTask.Result);
                         id = result.Id;
                     }
-                    else if (j < 5)
+                    else if (j < 9)
                     {
                         client.PutAsync($"{urlBase}/api/product/{id}",
                             new StringContent(

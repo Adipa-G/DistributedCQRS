@@ -11,7 +11,8 @@ namespace DistCqrs.Sample.Service.Order.View.Mappings
             builder.HasKey(e => e.Id);
 
             builder.HasMany(e => e.Items)
-                .WithOne(e => e.Order);
+                .WithOne(e => e.Order)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

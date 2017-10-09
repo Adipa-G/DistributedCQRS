@@ -35,7 +35,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
             for (var i = 0; i < 100000; i++)
             {
                 var sameRepeat = random.Next(1, 10);
-                var id = Guid.NewGuid();
+                var id = Guid.Empty;
                 var deleted = false;
 
                 for (var j = 0; j < sameRepeat; j++)
@@ -69,7 +69,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
                         var result = JsonConvert.DeserializeObject<OrderModel>(resultTask.Result);
                         id = result.Id;
                     }
-                    else if (j < 5)
+                    else if (j < 9)
                     {
                         client.PutAsync($"{urlBase}/api/order/{id}",
                             new StringContent(
@@ -133,7 +133,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
                         var result = JsonConvert.DeserializeObject<OrderItemModel>(resultTask.Result);
                         id = result.Id;
                     }
-                    else if (j < 5)
+                    else if (j < 9)
                     {
                         client.PutAsync($"{urlBase}/api/order/item/{orderId}/{id}",
                             new StringContent(
@@ -142,7 +142,7 @@ namespace DistCqrs.Sample.Performance.PerformanceTest
                     }
                     else
                     {
-                        client.DeleteAsync($"{urlBase}/api/order/{orderId}/{id}")
+                        client.DeleteAsync($"{urlBase}/api/order/item/{orderId}/{id}")
                             .Wait();
                         deleted = true;
                     }
