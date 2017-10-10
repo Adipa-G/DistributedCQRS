@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AbstractCqrs.Sample.Domain.Order\AbstractCqrs.Sample.Domain.Order.csproj" />
+    <ProjectReference Include="..\AbstractCqrs.Sample.Domain.Product\AbstractCqrs.Sample.Domain.Product.csproj" />
+  </ItemGroup>
+  
+</Project>
