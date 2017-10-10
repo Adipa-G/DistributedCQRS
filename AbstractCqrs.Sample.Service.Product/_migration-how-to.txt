@@ -1,3 +1,3 @@
 ﻿1. Open pacakage manager console
-2. Change directory to folder of project "DistCqrs.Sample.Service.Product"
-3. Run command "dotnet ef migrations add InitialCreate --context DistCqrs.Sample.Service.Product.View.ProductDbContext --startup-project ..\DistCqrs.Sample.WebApi.Product\DistCqrs.Sample.WebApi.Product.csproj"
+2. Change directory to folder of project "AbstractCqrs.Sample.Service.Product"
+3. Run command "dotnet ef migrations add InitialCreate --context AbstractCqrs.Sample.Service.Product.View.ProductDbContext --startup-project ..\AbstractCqrs.Sample.WebApi.Product\AbstractCqrs.Sample.WebApi.Product.csproj"
