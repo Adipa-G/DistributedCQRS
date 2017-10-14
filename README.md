@@ -403,7 +403,7 @@ Further, the command mappings / command handlers and event handlers are also reg
 
 The projects start with the AbstractCqrs.Sample namespace are sample projects. There are 2 APIs are included in the samples. Further Samples shows One large API (`AbstractCqrs.Sample.WebApi.Combined`) can be split into 2 different small micro services (`AbstractCqrs.Sample.WebApi.Product` and `AbstractCqrs.Sample.WebApi.Order`).
 
-#Performance
+# Performance
 
 When the `AbstractCqrs.Sample.WebApi.Combined` project is executed and `AbstractCqrs.Sample.Performance` is executed, the stack was able to handle 32 commands per second (on a 4th generation Core i5 mobile processor with 8Gb of RAM and a SSD).
 
