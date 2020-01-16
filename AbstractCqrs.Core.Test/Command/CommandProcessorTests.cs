@@ -25,6 +25,7 @@ namespace AbstractCqrs.Core.Test.Command
         private ILog log;
 
         private IUnitOfWork unitOfWork;
+        private IScope scope;
 
         [SetUp]
         public void Init()
@@ -39,21 +40,25 @@ namespace AbstractCqrs.Core.Test.Command
             unitOfWork = Substitute.For<IUnitOfWork>();
             unitOfWorkFactory.Create().Returns(unitOfWork);
 
+            scope = Substitute.For<IScope>();
+            serviceLocator.CreateScope().Returns(scope);
+            
+
             rootTypeResolver.GetRootType(Arg.Any<CreateAccountCommand>())
                 .Returns(typeof(Account));
 
-            serviceLocator
+            scope
                 .ResolveCommandHandler<Account, CreateAccountCommand>()
                 .Returns(new CreateAccountCommandHandler());
 
-            serviceLocator
+            scope
                 .ResolveCommandHandler<Account, UpdateAccountBalanceCommand>()
                 .Returns(new UpdateAccountBalanceCommandHandler());
 
-            serviceLocator.ResolveEventHandler<Account, AccountCreatedEvent>()
+            scope.ResolveEventHandler<Account, AccountCreatedEvent>()
                 .Returns(new AccountCreatedEventHandler());
 
-            serviceLocator
+            scope
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>()
                 .Returns(new AccountBalanceUpdatedEventHandler());
         }
@@ -81,11 +86,11 @@ namespace AbstractCqrs.Core.Test.Command
             var sut = CreateSut();
             sut.Process(cmd);
 
-            serviceLocator.Received(1)
+            scope.Received(1)
                 .ResolveCommandHandler<Account, UpdateAccountBalanceCommand>();
-            serviceLocator.Received(1)
+            scope.Received(1)
                 .ResolveEventHandler<Account, AccountCreatedEvent>();
-            serviceLocator.Received(1)
+            scope.Received(1)
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
 
             unitOfWorkFactory.Received(1).Create();
@@ -129,9 +134,9 @@ namespace AbstractCqrs.Core.Test.Command
             var sut = CreateSut();
             sut.Process(cmd);
 
-            serviceLocator.Received(1)
+            scope.Received(1)
                 .ResolveEventHandler<Account, AccountCreatedEvent>();
-            serviceLocator.Received(2)
+            scope.Received(2)
                 .ResolveEventHandler<Account, AccountBalanceUpdatedEvent>();
 
             Assert.IsNotNull(account);
@@ -142,7 +147,7 @@ namespace AbstractCqrs.Core.Test.Command
         [Test]
         public void GivenNoCommandHandlerRegistered_WhenProcess_ThenThrowException()
         {
-            serviceLocator
+            scope
                 .ResolveCommandHandler<Account, CreateAccountCommand>()
                 .Returns((ICommandHandler<Account, CreateAccountCommand>) null);
 

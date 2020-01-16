@@ -13,6 +13,7 @@ using AbstractCqrs.Sample.Service.Order.View;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 
 namespace AbstractCqrs.Sample.WebApi.Order
 {
@@ -22,20 +23,27 @@ namespace AbstractCqrs.Sample.WebApi.Order
         {
             ConfigureIOC(services);
 
-            services.AddMvc();
+            services.AddControllers();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Combined API", Version = "v1" });
+            });
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseMvc();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Combined API");
+            });
 
-            var log = app.ApplicationServices.GetService<ILogStart>();
-            log.Init();
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
 
-            var orderView =
-                app.ApplicationServices.GetService<IOrderView>() as
-                    OrderDbContext;
-            orderView.Database.Migrate();
 
             var locator =
                 app.ApplicationServices.GetService<IServiceLocator>() as
@@ -43,10 +51,17 @@ namespace AbstractCqrs.Sample.WebApi.Order
             locator.Init(app.ApplicationServices);
             locator.Register(new InternalBus(Constants.BusId));
 
-            var orderService =
-                app.ApplicationServices.GetService<IOrderService>();
-            locator.Register(orderService);
-            orderService.Init();
+            using (var scope = locator.CreateScope())
+            {
+                var log = scope.Resolve<ILogStart>();
+                log.Init();
+
+                var orderView = scope.Resolve<IOrderView>() as OrderDbContext;
+                orderView.Database.Migrate();
+
+                var orderService = scope.Resolve<IOrderService>();
+                orderService.Init();
+            }
         }
 
         private static void ConfigureIOC(IServiceCollection services)

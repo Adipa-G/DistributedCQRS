@@ -16,6 +16,7 @@ using AbstractCqrs.Sample.Service.Product.View;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 
 namespace AbstractCqrs.Sample.WebApi.Combined
 {
@@ -25,43 +26,51 @@ namespace AbstractCqrs.Sample.WebApi.Combined
         {
             ConfigureIOC(services);
 
-            services.AddMvc();
+            services.AddControllers();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Combined API", Version = "v1" });
+            });
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseMvc();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Combined API");
+            });
 
-            var log = app.ApplicationServices.GetService<ILogStart>();
-            log.Init();
-
-            var orderView =
-                app.ApplicationServices.GetService<IOrderView>() as
-                    OrderDbContext;
-            orderView.Database.Migrate();
-
-            var productView =
-                app.ApplicationServices.GetService<IProductView>() as
-                    ProductDbContext;
-            productView.Database.Migrate();
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
 
             var locator =
                 app.ApplicationServices.GetService<IServiceLocator>() as
                     ServiceLocator;
             locator.Init(app.ApplicationServices);
-
             locator.Register(new InternalBus(Service.Order.Constants.BusId));
             locator.Register(new InternalBus(Service.Product.Constants.BusId));
 
-            var orderService =
-                app.ApplicationServices.GetService<IOrderService>();
-            locator.Register(orderService);
-            orderService.Init();
+            using (var scope = locator.CreateScope())
+            {
+                var log = scope.Resolve<ILogStart>();
+                log.Init();
 
-            var productService =
-                app.ApplicationServices.GetService<IProductService>();
-            locator.Register(productService);
-            productService.Init();
+                var orderView = scope.Resolve<IOrderView>() as OrderDbContext;
+                orderView.Database.Migrate();
+
+                var productView = scope.Resolve<IProductView>() as ProductDbContext;
+                productView.Database.Migrate();
+                
+                var orderService = scope.Resolve<IOrderService>();
+                orderService.Init();
+
+                var productService = scope.Resolve<IProductService>();
+                productService.Init();
+            }
         }
 
         private static void ConfigureIOC(IServiceCollection services)

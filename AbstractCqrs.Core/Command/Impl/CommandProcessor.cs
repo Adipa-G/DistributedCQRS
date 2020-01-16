@@ -56,6 +56,7 @@ namespace AbstractCqrs.Core.Command.Impl
                 logBuilder.AppendLine($"Start command {cmd.GetType().FullName} {cmd.RootId}");
                 logBuilder.AppendLine($"\tStart processing command");
 
+                using (var scope = serviceLocator.CreateScope())
                 using (var unitOfWork = unitOfWorkFactory.Create())
                 {
                     var rootType = await eventStore.GetRootType(cmd.RootId) ??
@@ -63,7 +64,9 @@ namespace AbstractCqrs.Core.Command.Impl
                     logBuilder.AppendLine($"\t\tFound Root Type {rootType.FullName}");
 
                     var commandHandler = InvokeGeneric<object>(this,
-                        "ResolveCommandHandler", new[] { rootType, cmd.GetType() });
+                        "ResolveCommandHandler", new[] { rootType, cmd.GetType() },
+                        new object[]{ scope});
+
                     if (commandHandler == null)
                     {
                         var errorMsg =
@@ -75,7 +78,7 @@ namespace AbstractCqrs.Core.Command.Impl
                     logBuilder.AppendLine(
                         $"\t\tFound command handler {commandHandler.GetType().FullName}");
 
-                    root = await GetRoot(rootType, cmd.RootId);
+                    root = await GetRoot(scope, rootType, cmd.RootId);
                     logBuilder.AppendLine($"\t\tLoaded root {root.GetType().FullName}");
 
                     var events = (IList)await Invoke<dynamic>(commandHandler,
@@ -87,7 +90,7 @@ namespace AbstractCqrs.Core.Command.Impl
                         new[] { rootType }, new object[] { events });
                     logBuilder.AppendLine("\t\tSaved events");
 
-                    await ApplyEvents(root, events);
+                    await ApplyEvents(scope,root, events);
                     logBuilder.AppendLine("\t\tApplied events");
 
                     await unitOfWork.Complete();
@@ -120,7 +123,7 @@ namespace AbstractCqrs.Core.Command.Impl
             }
         }
 
-        private async Task<IRoot> GetRoot(Type rootType, Guid rootId)
+        private async Task<IRoot> GetRoot(IScope scope,Type rootType, Guid rootId)
         {
             var root = (IRoot) Activator.CreateInstance(rootType);
             var events = (IList) await InvokeGeneric<dynamic>(this,
@@ -129,18 +132,19 @@ namespace AbstractCqrs.Core.Command.Impl
             if (events.Count == 0)
                 return (IRoot) Activator.CreateInstance(rootType);
 
-            await ApplyEvents(root, events);
+            await ApplyEvents(scope,root, events);
             return root;
         }
 
-        private async Task ApplyEvents<TRoot>(TRoot root, IList events)
+        private async Task ApplyEvents<TRoot>(IScope scope,TRoot root, IList events)
             where TRoot : IRoot
         {
             foreach (var evt in events)
             {
                 var evtHandler = InvokeGeneric<object>(this,
                     "ResolveEventHandler",
-                    new[] {root.GetType(), evt.GetType()});
+                    new[] {root.GetType(), evt.GetType()},
+                    new object[]{scope});
                 var applyMethod = evtHandler.GetType().GetTypeInfo()
                     .GetMethod("Apply");
 
@@ -200,19 +204,19 @@ namespace AbstractCqrs.Core.Command.Impl
         //wrappers to make refactor safe
         //ReSharper disable UnusedMember.Local
         private ICommandHandler<TRoot, TCmd>
-            ResolveCommandHandler<TRoot, TCmd>()
+            ResolveCommandHandler<TRoot, TCmd>(IScope scope)
             where TRoot : IRoot, new()
             where TCmd : ICommand
         {
-            return serviceLocator.ResolveCommandHandler<TRoot, TCmd>();
+            return scope.ResolveCommandHandler<TRoot, TCmd>();
         }
 
         private IEventHandler<TRoot, TEvent>
-            ResolveEventHandler<TRoot, TEvent>()
+            ResolveEventHandler<TRoot, TEvent>(IScope scope)
             where TRoot : IRoot, new()
             where TEvent : IEvent<TRoot>
         {
-            return serviceLocator.ResolveEventHandler<TRoot, TEvent>();
+            return scope.ResolveEventHandler<TRoot, TEvent>();
         }
 
         private Task<IList<IEvent<TRoot>>> GetEvents<TRoot>(Guid rootId)

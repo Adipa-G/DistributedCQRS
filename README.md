@@ -136,22 +136,42 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
 
 ## 5. Implement Service locator
 
-Service locator is used to find services such as command handlers, event handlers. The sub class of `BaseServiceLocator` can be used to implement this. The `BaseServiceLocator` is IOC agnostic, and at this point the IOC container is linked. The given example uses the IServiceProvider, and it can be replaced with any other IOC.
+Service locator is used to find services such as command handlers, event handlers. The sub class of `BaseServiceLocator` and `BaseScope` can be used to implement this. The `BaseServiceLocator` is IOC agnostic, and at this point the IOC container is linked. The given example uses the IServiceProvider and IServiceScope, and it can be replaced with any other IOC.
 
 ```C#
 public class ServiceLocator : BaseServiceLocator
 {
-        private IServiceProvider serviceProvider;
+	private IServiceProvider serviceProvider;
 
-        public void Init(IServiceProvider sp)
-        {
-                serviceProvider = sp;
-        }
+	public void Init(IServiceProvider sp)
+	{
+		serviceProvider = sp;
+	}
 
-        protected override object Resolve(Type @interface)
-        {
-                return serviceProvider.GetService(@interface);
-        }
+	public override IScope CreateScope()
+	{
+		return new Scope(this, serviceProvider.CreateScope());
+	}
+}
+
+public class Scope : BaseScope
+{
+	private IServiceScope serviceScope;
+
+	public Scope(IServiceLocator serviceLocator, IServiceScope serviceScope) : base(serviceLocator)
+	{
+		this.serviceScope = serviceScope;
+	}
+
+	protected override object Resolve(Type @interface)
+	{
+		return serviceScope.ServiceProvider.GetService(@interface);
+	}
+
+	public override void Dispose()
+	{
+		serviceScope.Dispose();
+	}
 }
 ```
 

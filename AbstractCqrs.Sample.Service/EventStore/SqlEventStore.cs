@@ -27,7 +27,7 @@ namespace AbstractCqrs.Sample.Service.EventStore
 
             using (var con = new SqlConnection(Config.ConnectionString))
             {
-                con.OpenAsync();
+                con.OpenAsync().Wait();
 
                 var cmd = con.CreateCommand();
                 cmd.CommandText = createTable;

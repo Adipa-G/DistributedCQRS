@@ -3,3 +3,4 @@ artifacts/**/*.*
 **/obj/**/*.*
 **/bin/**/*.*
 .vs/**
+/AbstractCqrs.sln.DotSettings.user

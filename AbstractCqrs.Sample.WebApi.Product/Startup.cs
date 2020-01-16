@@ -13,6 +13,7 @@ using AbstractCqrs.Sample.Service.Product.View;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 
 namespace AbstractCqrs.Sample.WebApi.Product
 {
@@ -22,20 +23,26 @@ namespace AbstractCqrs.Sample.WebApi.Product
         {
             ConfigureIOC(services);
 
-            services.AddMvc();
+            services.AddControllers();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Combined API", Version = "v1" });
+            });
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseMvc();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Combined API");
+            });
 
-            var log = app.ApplicationServices.GetService<ILogStart>();
-            log.Init();
-
-            var productView =
-                app.ApplicationServices.GetService<IProductView>() as
-                    ProductDbContext;
-            productView.Database.Migrate();
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
 
             var locator =
                 app.ApplicationServices.GetService<IServiceLocator>() as
@@ -43,10 +50,17 @@ namespace AbstractCqrs.Sample.WebApi.Product
             locator.Init(app.ApplicationServices);
             locator.Register(new InternalBus(Constants.BusId));
 
-            var productService =
-                app.ApplicationServices.GetService<IProductService>();
-            locator.Register(productService);
-            productService.Init();
+            using (var scope = locator.CreateScope())
+            {
+                var log = scope.Resolve<ILogStart>();
+                log.Init();
+
+                var productView = scope.Resolve<IProductView>() as ProductDbContext;
+                productView.Database.Migrate();
+
+                var productService = scope.Resolve<IProductService>();
+                productService.Init();
+            }
         }
 
         private static void ConfigureIOC(IServiceCollection services)

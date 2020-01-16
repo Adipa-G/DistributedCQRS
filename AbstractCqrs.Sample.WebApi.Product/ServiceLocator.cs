@@ -1,6 +1,7 @@
 ﻿using System;
 using AbstractCqrs.Core.Resolve;
 using AbstractCqrs.Sample.Service.Resolve;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AbstractCqrs.Sample.WebApi.Product
 {
@@ -14,9 +15,9 @@ namespace AbstractCqrs.Sample.WebApi.Product
             serviceProvider = sp;
         }
 
-        protected override object Resolve(Type @interface)
+        public override IScope CreateScope()
         {
-            return serviceProvider.GetService(@interface);
+            return new Scope(this, serviceProvider.CreateScope());
         }
     }
 }

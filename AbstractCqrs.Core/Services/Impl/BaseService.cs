@@ -29,11 +29,14 @@ namespace AbstractCqrs.Core.Services.Impl
 
             try
             {
-                var commandProcessor =
-                    serviceLocator.Resolve<ICommandProcessor>();
+                using (var scope = serviceLocator.CreateScope())
+                {
+                    var commandProcessor =
+                        scope.Resolve<ICommandProcessor>();
 
-                await commandProcessor.Process(cmd);
-                await OnCommandProcessed(cmd);
+                    await commandProcessor.Process(cmd);
+                    await OnCommandProcessed(cmd);
+                }
             }
             catch (Exception ex)
             {
